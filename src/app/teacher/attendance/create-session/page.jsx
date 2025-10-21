@@ -1,4 +1,4 @@
-// src/app/teacher/attendance/create-session/page.jsx
+// src/app/teacher/attendance/create-session/page.jsx (KODE LENGKAP DENGAN PERBAIKAN TAMPILAN UX)
 "use client";
 
 import { useState, useEffect } from "react";
@@ -23,10 +23,12 @@ import {
   QrCode,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import SchoolLocationPickerMap from "@/components/guru/SchoolLocationPickerMap"; // Import komponen peta baru
 
 export default function CreateAttendanceSessionPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const teacherId = user?.profileData?.id;
 
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [sessionDuration, setSessionDuration] = useState(30);
@@ -36,6 +38,9 @@ export default function CreateAttendanceSessionPage() {
   );
   const [isCreating, setIsCreating] = useState(false);
 
+  // State baru untuk data lokasi dari peta
+  const [locationData, setLocationData] = useState(null);
+
   // Get teacher schedule
   const {
     schedule,
@@ -43,7 +48,7 @@ export default function CreateAttendanceSessionPage() {
     error: scheduleError,
     getScheduleForDay,
     refetch: refetchSchedule,
-  } = useTeacherSchedule(user?.profileData?.id);
+  } = useTeacherSchedule(teacherId);
 
   // Get teacher attendance functions
   const {
@@ -51,34 +56,34 @@ export default function CreateAttendanceSessionPage() {
     getActiveSessions,
     sessions: activeSessions,
     loading: sessionLoading,
-  } = useTeacherAttendance(user?.profileData?.id);
+  } = useTeacherAttendance(teacherId);
 
-  // Get today's schedule
+  // Get today's schedule (redundant check for date logic)
   const {
     data: todayScheduleData,
     loading: todayLoading,
     refetch: refetchToday,
   } = useApi(
-    user?.profileData?.id
+    teacherId
       ? () => {
           const today = new Date()
             .toLocaleDateString("id-ID", { weekday: "long" })
             .toUpperCase();
-          return teacherAPI.getDaySchedule(user.profileData.id, today);
+          return teacherAPI.getDaySchedule(teacherId, today);
         }
       : null,
     {
-      immediate: !!user?.profileData?.id,
+      immediate: !!teacherId,
       showToast: false,
     }
   );
 
   // Get active sessions on component mount
   useEffect(() => {
-    if (user?.profileData?.id) {
+    if (teacherId) {
       getActiveSessions();
     }
-  }, [user?.profileData?.id, getActiveSessions]);
+  }, [teacherId, getActiveSessions]);
 
   // Get current time info
   const getCurrentTimeInfo = () => {
@@ -103,6 +108,7 @@ export default function CreateAttendanceSessionPage() {
       .toLocaleDateString("id-ID", { weekday: "long" })
       .toUpperCase();
 
+    // Gunakan data dari useTeacherSchedule yang lebih lengkap
     if (!schedule) return [];
     return schedule[dayName] || [];
   };
@@ -148,10 +154,31 @@ export default function CreateAttendanceSessionPage() {
       return;
     }
 
+    // Validasi Geolocation jika sessionType adalah 'qr' dan belum ada lokasi yang dipilih.
+    if (sessionType === "qr" && !locationData) {
+      toast.error("Mode QR Code memerlukan penentuan lokasi Geofence di peta.");
+      return;
+    }
+
+    // Siapkan data lokasi yang akan dikirim
+    const finalLocationData = sessionType === "qr" ? locationData : {};
+
+    if (sessionType === "manual") {
+      // Untuk mode manual, pastikan lat/lon/radius tidak dikirim (server akan mengabaikannya)
+      finalLocationData.latitude = undefined;
+      finalLocationData.longitude = undefined;
+      finalLocationData.radiusMeters = undefined;
+    }
+
     try {
       setIsCreating(true);
 
-      const result = await createSession(selectedSchedule.id, sessionDuration);
+      // Panggil createSession dengan ID jadwal, durasi, dan data lokasi
+      const result = await createSession(
+        selectedSchedule.id,
+        sessionDuration,
+        finalLocationData // Kirim objek lokasi ke hook
+      );
 
       toast.success("Sesi absensi berhasil dibuat!");
 
@@ -165,14 +192,9 @@ export default function CreateAttendanceSessionPage() {
     }
   };
 
-  // Format time display
-  const formatTime = (time) => {
-    return time;
-  };
-
   // Get time range display
   const getTimeRange = (startTime, endTime) => {
-    return `${formatTime(startTime)} - ${formatTime(endTime)}`;
+    return `${startTime} - ${endTime}`; // Time strings assumed to be in HH:mm format
   };
 
   // Get subject color
@@ -198,12 +220,12 @@ export default function CreateAttendanceSessionPage() {
 
     return (
       <div
-        className={`card p-4 cursor-pointer transition-all duration-200 border-2 ${
+        className={`card p-4 transition-all duration-200 border-2 ${
           isSelected
             ? "border-green-500 bg-green-50"
             : isDisabled
             ? "border-gray-200 bg-gray-50 cursor-not-allowed"
-            : "border-gray-200 hover:border-green-300 hover:shadow-md"
+            : "border-gray-200 hover:border-green-300 hover:shadow-md cursor-pointer"
         } ${isActive ? "ring-2 ring-green-200" : ""}`}
         onClick={() => !isDisabled && onSelect(scheduleItem)}
       >
@@ -287,7 +309,7 @@ export default function CreateAttendanceSessionPage() {
   if (scheduleLoading || todayLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-12 card">
           <RefreshCw className="w-8 h-8 animate-spin text-green-600" />
           <span className="ml-2 text-gray-600">Memuat jadwal...</span>
         </div>
@@ -311,19 +333,19 @@ export default function CreateAttendanceSessionPage() {
               Buat Sesi Absensi
             </h1>
             <p className="text-gray-600 mt-1">
-              Pilih jadwal dan buat sesi absensi baru
+              Pilih jadwal, atur durasi & lokasi (jika perlu)
             </p>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Schedule Selection */}
+        {/* Schedule Selection (Colspan 2) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Date Selector */}
           <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Pilih Tanggal
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-blue-500" /> Pilih Tanggal
             </h2>
             <div className="flex items-center space-x-4">
               <div className="flex-1">
@@ -334,7 +356,7 @@ export default function CreateAttendanceSessionPage() {
                     setSelectedDate(e.target.value);
                     setSelectedSchedule(null); // Reset selection when date changes
                   }}
-                  className="form-input w-full"
+                  className="input-field w-full"
                 />
               </div>
               <button
@@ -353,10 +375,10 @@ export default function CreateAttendanceSessionPage() {
           <div className="card p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                Jadwal Tersedia
+                Jadwal Mengajar ({currentDate})
               </h2>
               <div className="text-sm text-gray-500">
-                {scheduleForDate.length} Sesi
+                {scheduleForDate.length} Sesi Ditemukan
               </div>
             </div>
 
@@ -376,19 +398,19 @@ export default function CreateAttendanceSessionPage() {
                 <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-400" />
                 <p className="text-lg font-medium">Tidak Ada Jadwal</p>
                 <p className="text-sm">
-                  Tidak ada jadwal mengajar untuk tanggal yang dipilih
+                  Tidak ada jadwal mengajar untuk {selectedDate}
                 </p>
               </div>
             )}
           </div>
         </div>
 
-        {/* Session Configuration */}
+        {/* Session Configuration (Colspan 1) */}
         <div className="space-y-6">
           {/* Session Settings */}
           <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Pengaturan Sesi
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <Settings className="w-5 h-5 text-purple-500" /> Pengaturan Sesi
             </h2>
 
             <div className="space-y-4">
@@ -400,7 +422,7 @@ export default function CreateAttendanceSessionPage() {
                 <select
                   value={sessionDuration}
                   onChange={(e) => setSessionDuration(Number(e.target.value))}
-                  className="form-select w-full"
+                  className="input-field w-full"
                 >
                   <option value={15}>15 menit</option>
                   <option value={30}>30 menit</option>
@@ -416,27 +438,31 @@ export default function CreateAttendanceSessionPage() {
                   Tipe Absensi
                 </label>
                 <div className="space-y-2">
-                  <label className="flex items-center">
+                  <label className="flex items-center p-2 bg-white rounded-lg border hover:bg-gray-50 cursor-pointer">
                     <input
                       type="radio"
                       name="sessionType"
                       value="manual"
                       checked={sessionType === "manual"}
                       onChange={(e) => setSessionType(e.target.value)}
-                      className="form-radio"
+                      className="form-radio text-blue-600"
                     />
-                    <span className="ml-2 text-sm">Manual (Guru mengisi)</span>
+                    <span className="ml-2 text-sm font-medium">
+                      Manual (Guru mengisi)
+                    </span>
                   </label>
-                  <label className="flex items-center">
+                  <label className="flex items-center p-2 bg-white rounded-lg border hover:bg-gray-50 cursor-pointer">
                     <input
                       type="radio"
                       name="sessionType"
                       value="qr"
                       checked={sessionType === "qr"}
                       onChange={(e) => setSessionType(e.target.value)}
-                      className="form-radio"
+                      className="form-radio text-blue-600"
                     />
-                    <span className="ml-2 text-sm">QR Code (Siswa scan)</span>
+                    <span className="ml-2 text-sm font-medium flex items-center gap-1">
+                      QR Code (Siswa scan) <QrCode className="w-4 h-4" />
+                    </span>
                   </label>
                 </div>
               </div>
@@ -449,7 +475,6 @@ export default function CreateAttendanceSessionPage() {
               <h3 className="text-lg font-semibold text-green-900 mb-4">
                 Jadwal Dipilih
               </h3>
-
               <div className="space-y-3 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-green-700">Mata Pelajaran:</span>
@@ -501,11 +526,32 @@ export default function CreateAttendanceSessionPage() {
             </div>
           )}
 
+          {/* Peta untuk Konfigurasi Lokasi (Hanya muncul jika QR Code dipilih) */}
+          {sessionType === "qr" && (
+            <div className="card p-4 border-orange-200 bg-orange-50">
+              <h3 className="text-lg font-semibold text-orange-900 mb-3 flex items-center gap-2">
+                <MapPin className="w-5 h-5" /> Konfigurasi Geofence (QR)
+              </h3>
+              <p className="text-sm text-orange-700 mb-3">
+                Tentukan lokasi wajib siswa untuk dapat melakukan scan QR Code.
+              </p>
+              <SchoolLocationPickerMap
+                initialLocation={locationData} // Kirim data yang sudah ada (jika ada)
+                initialRadius={locationData?.radiusMeters}
+                onLocationSelect={setLocationData} // Terima data dari peta
+              />
+            </div>
+          )}
+
           {/* Action Buttons */}
           <div className="space-y-3">
             <button
               onClick={handleCreateSession}
-              disabled={!selectedSchedule || isCreating}
+              disabled={
+                !selectedSchedule ||
+                isCreating ||
+                (sessionType === "qr" && !locationData)
+              }
               className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isCreating ? (
@@ -516,7 +562,9 @@ export default function CreateAttendanceSessionPage() {
               ) : (
                 <>
                   <Play className="w-4 h-4 mr-2" />
-                  Buat Sesi Absensi
+                  {sessionType === "qr"
+                    ? "Buat Sesi QR Code"
+                    : "Buat Sesi Manual"}
                 </>
               )}
             </button>
@@ -537,10 +585,13 @@ export default function CreateAttendanceSessionPage() {
                 <p className="font-medium mb-1">Tips:</p>
                 <ul className="space-y-1 text-xs">
                   <li>
-                    • Pilih jadwal yang sedang berlangsung atau akan dimulai
+                    • Pilih jadwal yang **sedang berlangsung** atau **akan
+                    dimulai**
                   </li>
-                  <li>• Durasi sesi menentukan berapa lama siswa bisa absen</li>
-                  <li>• Mode QR Code memungkinkan siswa absen mandiri</li>
+                  <li>• Mode QR Code memerlukan **lokasi (Geofence)**</li>
+                  <li>
+                    • Durasi sesi menentukan waktu maksimal siswa dapat absen
+                  </li>
                 </ul>
               </div>
             </div>

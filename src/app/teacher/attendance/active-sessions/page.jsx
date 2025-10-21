@@ -1,7 +1,7 @@
-// src/app/teacher/attendance/active-sessions/page.jsx
+// src/app/teacher/attendance/active-sessions/page.jsx (KODE LENGKAP DAN DIPERBAIKI)
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeacherAttendance } from "@/hooks/useApi";
 import {
@@ -10,8 +10,6 @@ import {
   MapPin,
   BookOpen,
   Play,
-  Pause,
-  Square,
   RefreshCw,
   AlertCircle,
   CheckCircle,
@@ -20,17 +18,18 @@ import {
   Calendar,
   Eye,
   MoreVertical,
-  Settings,
 } from "lucide-react";
-import { formatDistanceToNow, parseISO, isAfter, isBefore } from "date-fns";
+import { formatDistanceToNow, parseISO, isAfter } from "date-fns";
 import { id } from "date-fns/locale";
 import Link from "next/link";
 
 export default function ActiveSessionsPage() {
   const { user } = useAuth();
+  const teacherId = user?.profileData?.id; // Dapatkan teacherId
   const [refreshInterval, setRefreshInterval] = useState(null);
-  const [selectedSession, setSelectedSession] = useState(null);
-  const [showSessionDetails, setShowSessionDetails] = useState(false);
+  // State modal dihilangkan karena kita akan navigasi ke halaman detail
+  // const [selectedSession, setSelectedSession] = useState(null);
+  // const [showSessionDetails, setShowSessionDetails] = useState(false);
 
   const {
     sessions,
@@ -38,13 +37,16 @@ export default function ActiveSessionsPage() {
     error,
     getActiveSessions,
     markStudentPresent,
-    markStudentAbsent,
+    markStudentAbsent, // Akan kita ganti ke markStudentAlpha
     markStudentLate,
-  } = useTeacherAttendance(user?.profileData?.id);
+    markStudentAlpha, // Tambahkan yang baru dari hook
+    markStudentSick, // Tambahkan yang baru dari hook
+    markStudentPermission, // Tambahkan yang baru dari hook
+  } = useTeacherAttendance(teacherId);
 
   // Auto refresh active sessions every 30 seconds
   useEffect(() => {
-    if (user?.profileData?.id) {
+    if (teacherId) {
       getActiveSessions();
 
       const interval = setInterval(() => {
@@ -57,7 +59,7 @@ export default function ActiveSessionsPage() {
         if (interval) clearInterval(interval);
       };
     }
-  }, [user?.profileData?.id, getActiveSessions]);
+  }, [teacherId, getActiveSessions]);
 
   // Format time remaining
   const getTimeRemaining = (session) => {
@@ -90,7 +92,7 @@ export default function ActiveSessionsPage() {
     return "active";
   };
 
-  // Get attendance stats for a session
+  // Get attendance stats for a session (MODIFIED to include SICK and PERMISSION)
   const getAttendanceStats = (session) => {
     const attendances = session.attendances || [];
     const total = attendances.length;
@@ -98,14 +100,21 @@ export default function ActiveSessionsPage() {
       (a) => a.status === "HADIR" || a.status === "PRESENT"
     ).length;
     const absent = attendances.filter(
-      (a) => a.status === "TIDAK_HADIR" || a.status === "ABSENT"
+      (a) =>
+        a.status === "TIDAK_HADIR" ||
+        a.status === "ABSENT" ||
+        a.status === "ALPHA"
     ).length;
     const late = attendances.filter(
       (a) => a.status === "TERLAMBAT" || a.status === "LATE"
     ).length;
     const pending = attendances.filter((a) => a.status === "PENDING").length;
 
-    return { total, present, absent, late, pending };
+    // NEW: Tambahkan SICK dan PERMISSION stat (walaupun tidak ditampilkan di summary card, tetap bagus di logikanya)
+    const sick = attendances.filter((a) => a.status === "SAKIT").length;
+    const permission = attendances.filter((a) => a.status === "IZIN").length;
+
+    return { total, present, absent, late, pending, sick, permission };
   };
 
   // Handle manual attendance marking
@@ -115,12 +124,13 @@ export default function ActiveSessionsPage() {
         case "PRESENT":
           await markStudentPresent(attendanceId);
           break;
-        case "ABSENT":
-          await markStudentAbsent(attendanceId);
+        case "ABSENT": // Jika masih ada state ABSENT, ganti ke ALPHA
+          await markStudentAlpha(attendanceId);
           break;
         case "LATE":
           await markStudentLate(attendanceId);
           break;
+        // Status baru tidak perlu ditangani di sini karena ini untuk sesi aktif (yang sudah dimulai)
       }
       // Refresh sessions after marking attendance
       getActiveSessions();
@@ -133,6 +143,7 @@ export default function ActiveSessionsPage() {
     const timeRemaining = getTimeRemaining(session);
     const status = getSessionStatus(session);
     const stats = getAttendanceStats(session);
+    const isGeoFenced = session.latitude && session.radiusMeters;
 
     return (
       <div className="card p-6 hover:shadow-lg transition-shadow duration-200">
@@ -161,6 +172,7 @@ export default function ActiveSessionsPage() {
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* **FIXED:** Tombol Detail sekarang mengarahkan ke halaman [id] */}
             <Link
               href={`/teacher/attendance/active-sessions/${session.id}`}
               className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
@@ -182,10 +194,7 @@ export default function ActiveSessionsPage() {
             </div>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <MapPin className="w-4 h-4" />
-              <span>
-                Ruang Kelas{" "}
-                {session.schedule?.class?.name || "Ruang tidak ditentukan"}
-              </span>
+              <span>Ruang {session.schedule?.room || "Tidak Ditentukan"}</span>
             </div>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <Calendar className="w-4 h-4" />
@@ -215,12 +224,13 @@ export default function ActiveSessionsPage() {
                   : `Berakhir ${timeRemaining}`}
               </span>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <BookOpen className="w-4 h-4" />
-              <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
-                Token: {session.token}
-              </span>
-            </div>
+            {/* Display GeoFence Info */}
+            {isGeoFenced && (
+              <div className="flex items-center space-x-2 text-sm text-orange-600 font-medium">
+                <MapPin className="w-4 h-4" />
+                <span>Geofence Aktif: {session.radiusMeters}m</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -283,6 +293,7 @@ export default function ActiveSessionsPage() {
           </div>
 
           <div className="flex items-center space-x-2">
+            {/* **FIXED:** Tombol Detail sekarang menggunakan Link */}
             <Link
               href={`/teacher/attendance/active-sessions/${session.id}`}
               className="btn-secondary btn-sm"
@@ -296,177 +307,7 @@ export default function ActiveSessionsPage() {
     );
   };
 
-  const SessionDetailsModal = () => {
-    if (!selectedSession) return null;
-
-    const stats = getAttendanceStats(selectedSession);
-    const attendances = selectedSession.attendances || [];
-
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-          {/* Modal Header */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Detail Sesi Absensi
-                </h2>
-                <p className="text-sm text-gray-600 mt-1">
-                  {selectedSession.schedule?.subject?.name} - Kelas{" "}
-                  {selectedSession.schedule?.class?.name}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowSessionDetails(false)}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
-              >
-                <XCircle className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Modal Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-            {/* Stats Summary */}
-            <div className="grid grid-cols-4 gap-4 mb-6">
-              <div className="card p-4 text-center">
-                <div className="text-2xl font-bold text-gray-900">
-                  {stats.total}
-                </div>
-                <div className="text-sm text-gray-600">Total Siswa</div>
-              </div>
-              <div className="card p-4 text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {stats.present}
-                </div>
-                <div className="text-sm text-gray-600">Hadir</div>
-              </div>
-              <div className="card p-4 text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {stats.absent}
-                </div>
-                <div className="text-sm text-gray-600">Tidak Hadir</div>
-              </div>
-              <div className="card p-4 text-center">
-                <div className="text-2xl font-bold text-yellow-600">
-                  {stats.late}
-                </div>
-                <div className="text-sm text-gray-600">Terlambat</div>
-              </div>
-            </div>
-
-            {/* Attendance List */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Daftar Absensi
-              </h3>
-
-              {attendances.length > 0 ? (
-                <div className="space-y-2">
-                  {attendances.map((attendance) => (
-                    <div
-                      key={attendance.id}
-                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                          <Users className="w-5 h-5 text-gray-600" />
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {attendance.student?.name || "Nama Siswa"}
-                          </div>
-                          <div className="text-sm text-gray-600">
-                            NIS: {attendance.student?.nis || "ID Siswa"}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center space-x-3">
-                        <span
-                          className={`px-3 py-1 text-xs font-medium rounded-full ${
-                            attendance.status === "HADIR" ||
-                            attendance.status === "PRESENT"
-                              ? "bg-green-100 text-green-800"
-                              : attendance.status === "TIDAK_HADIR" ||
-                                attendance.status === "ABSENT"
-                              ? "bg-red-100 text-red-800"
-                              : attendance.status === "TERLAMBAT" ||
-                                attendance.status === "LATE"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
-                          }`}
-                        >
-                          {attendance.status === "HADIR" ||
-                          attendance.status === "PRESENT"
-                            ? "Hadir"
-                            : attendance.status === "TIDAK_HADIR" ||
-                              attendance.status === "ABSENT"
-                            ? "Tidak Hadir"
-                            : attendance.status === "TERLAMBAT" ||
-                              attendance.status === "LATE"
-                            ? "Terlambat"
-                            : "Menunggu"}
-                        </span>
-
-                        {attendance.status === "PENDING" && (
-                          <div className="flex items-center space-x-1">
-                            <button
-                              onClick={() =>
-                                handleMarkAttendance(attendance.id, "PRESENT")
-                              }
-                              className="p-1 text-green-600 hover:bg-green-100 rounded"
-                              title="Tandai Hadir"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleMarkAttendance(attendance.id, "LATE")
-                              }
-                              className="p-1 text-yellow-600 hover:bg-yellow-100 rounded"
-                              title="Tandai Terlambat"
-                            >
-                              <Clock className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleMarkAttendance(attendance.id, "ABSENT")
-                              }
-                              className="p-1 text-red-600 hover:bg-red-100 rounded"
-                              title="Tandai Tidak Hadir"
-                            >
-                              <XCircle className="w-4 h-4" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p>Belum ada siswa yang absen</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Modal Footer */}
-          <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-            <button
-              onClick={() => setShowSessionDetails(false)}
-              className="btn-secondary"
-            >
-              Tutup
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // ... (SessionDetailsModal dihilangkan dari sini karena sudah tidak relevan)
 
   if (loading) {
     return (
@@ -595,9 +436,6 @@ export default function ActiveSessionsPage() {
           </p>
         </div>
       )}
-
-      {/* Session Details Modal */}
-      {showSessionDetails && <SessionDetailsModal />}
     </div>
   );
 }

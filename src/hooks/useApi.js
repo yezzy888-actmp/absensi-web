@@ -1670,6 +1670,9 @@ export function useTeacherSchedule(teacherId) {
 /**
  * Hook for teacher attendance session management
  */
+/**
+ * Hook for teacher attendance session management
+ */
 export function useTeacherAttendance(teacherId) {
   const [sessionsData, setSessionsData] = useState([]);
   const [loading, setLoading] = useState(false); // General loading for the hook
@@ -1708,7 +1711,9 @@ export function useTeacherAttendance(teacherId) {
   );
 
   const createSession = useCallback(
-    async (scheduleId, durationMinutes = 30) => {
+    // MODIFIED: Tambahkan locationData sebagai parameter ketiga
+    async (scheduleId, durationMinutes = 30, locationData = {}) => {
+      // Tambahkan locationData
       if (!teacherId) {
         const err = new Error("Teacher ID tidak tersedia.");
         setError(err.message);
@@ -1717,10 +1722,16 @@ export function useTeacherAttendance(teacherId) {
       setLoading(true);
       setError(null);
       try {
-        const response = await teacherAPI.createSession(
-          teacherId,
+        const sessionData = {
+          // Buat objek data yang dikirim ke API
           scheduleId,
-          durationMinutes
+          durationMinutes,
+          ...locationData, // Spread data geolokasi (latitude, longitude, radiusMeters)
+        };
+
+        const response = await teacherAPI.createAttendanceSession(
+          teacherId,
+          sessionData // Kirim objek data tunggal
         );
         toast.success("Sesi absensi berhasil dibuat!");
         return response.data;
@@ -1754,9 +1765,7 @@ export function useTeacherAttendance(teacherId) {
       return getAttendanceSessions({ scheduleId });
     },
     [getAttendanceSessions]
-  );
-  // --- Functions to UPDATE existing attendance status ---
-
+  ); // --- Functions to UPDATE existing attendance status ---
   const updateAttendanceStatus = useCallback(
     async (
       attendanceId,
@@ -1766,7 +1775,7 @@ export function useTeacherAttendance(teacherId) {
     ) => {
       if (!teacherId) {
         const err = new Error("Teacher ID tidak tersedia.");
-        setError(err.message);
+        setError(err.message); // Set hook-level error
         toast.error(err.message); // Show toast for this specific error
         throw err;
       }
@@ -1898,13 +1907,11 @@ export function useTeacherAttendance(teacherId) {
     createSession,
     getActiveSessions,
     getSessionsForDate,
-    getSessionsBySchedule,
-    // Functions for UPDATING status of an EXISTING attendance record
+    getSessionsBySchedule, // Functions for UPDATING status of an EXISTING attendance record
     markStudentPresent,
     markStudentAlpha, // Formerly markStudentAbsent
     markStudentSick, // New
-    markStudentPermission, // New
-    // Function for CREATING a NEW manual attendance record
+    markStudentPermission, // New // Function for CREATING a NEW manual attendance record
     createStudentAttendance,
     addAbsentStudent, // Kept for convenience, uses createStudentAttendance
   };

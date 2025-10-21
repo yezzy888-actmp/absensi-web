@@ -19,18 +19,16 @@ import {
   XCircle,
   Timer,
   Calendar,
-  TimerIcon,
-  Download,
   Search,
   UserCheck,
   UserX,
-  Settings,
   Smartphone,
   Wifi,
 } from "lucide-react";
 import { formatDistanceToNow, parseISO, isAfter, format } from "date-fns";
 import { id } from "date-fns/locale";
 import Link from "next/link";
+// Asumsi QRCodeDisplay sudah ada di path ini atau harus dibuat/diimpor
 import QRCodeDisplay from "@/components/ui/QrCodeDisplay";
 
 export default function ActiveSessionDetailPage() {
@@ -38,6 +36,7 @@ export default function ActiveSessionDetailPage() {
   const router = useRouter();
   const { user } = useAuth();
   const sessionId = params.id;
+  const teacherId = user?.profileData?.id;
 
   const [refreshInterval, setRefreshInterval] = useState(null);
   const [selectedStudents, setSelectedStudents] = useState([]);
@@ -47,16 +46,14 @@ export default function ActiveSessionDetailPage() {
   const [bulkAction, setBulkAction] = useState("");
 
   const {
-    sessions, // This will be the general list of sessions if no sessionId is passed to getAttendanceSessions
     loading,
     error,
     getAttendanceSessions,
     markStudentPresent,
-    markStudentAlpha, // Use this for "Tidak Hadir" (Alpha)
-    markStudentSick, // New: For "Sakit"
-    markStudentPermission, // New: For "Izin"
-    addAbsentStudent, // This seems to be for adding a new absent student, not marking an existing one. Keep if needed elsewhere.
-  } = useTeacherAttendance(user?.profileData?.id);
+    markStudentAlpha, // Menggunakan Alpha
+    markStudentSick, // New: for Sakit
+    markStudentPermission, // New: for Izin
+  } = useTeacherAttendance(teacherId);
 
   // Define a local state for the current session details
   const [currentSessionDetails, setCurrentSessionDetails] = useState(null);
@@ -65,10 +62,10 @@ export default function ActiveSessionDetailPage() {
   useEffect(() => {
     let interval;
     const fetchSessionDetails = async () => {
-      if (user?.profileData?.id && sessionId) {
+      if (teacherId && sessionId) {
         try {
           const fetchedSession = await getAttendanceSessions({ sessionId });
-          // Explicitly set the fetched session to local state
+
           if (
             fetchedSession &&
             fetchedSession.sessions &&
@@ -76,10 +73,10 @@ export default function ActiveSessionDetailPage() {
           ) {
             setCurrentSessionDetails(fetchedSession.sessions[0]);
           } else if (fetchedSession && fetchedSession.id) {
-            // If the API directly returns the session object
+            // Handle case where API returns session directly without wrapping in 'sessions' array
             setCurrentSessionDetails(fetchedSession);
           } else {
-            setCurrentSessionDetails(null); // Session not found or empty response
+            setCurrentSessionDetails(null);
           }
         } catch (err) {
           console.error("Error fetching session details:", err);
@@ -100,7 +97,7 @@ export default function ActiveSessionDetailPage() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [user?.profileData?.id, sessionId, getAttendanceSessions]);
+  }, [teacherId, sessionId, getAttendanceSessions]);
 
   // Use currentSessionDetails for rendering
   const currentSession = currentSessionDetails;
@@ -132,7 +129,7 @@ export default function ActiveSessionDetailPage() {
     return isAfter(now, expiresAt) ? "expired" : "active";
   }, []);
 
-  // Get attendance stats
+  // Get attendance stats (MODIFIED to include SICK and PERMISSION)
   const getAttendanceStats = useCallback((session) => {
     const attendances = session?.attendances || [];
     const total = attendances.length;
@@ -146,43 +143,37 @@ export default function ActiveSessionDetailPage() {
         a.status === "ALPHA"
     ).length;
 
-    const sick = attendances.filter((a) => a.status === "SAKIT").length; // New: Sakit stat
-    const permission = attendances.filter((a) => a.status === "IZIN").length; // New: Izin stat
+    const sick = attendances.filter((a) => a.status === "SAKIT").length;
+    const permission = attendances.filter((a) => a.status === "IZIN").length;
     const pending = attendances.filter((a) => a.status === "PENDING").length;
 
     return { total, present, absent, sick, permission, pending };
   }, []);
 
-  // Handle attendance marking
+  // Handle attendance marking (MODIFIED to include SICK and PERMISSION)
   const handleMarkAttendance = async (attendanceId, status) => {
     try {
       switch (status) {
         case "PRESENT":
           await markStudentPresent(attendanceId);
           break;
-        case "ALPHA": // Using markStudentAlpha
+        case "ALPHA":
           await markStudentAlpha(attendanceId);
           break;
-        case "SICK": // Using markStudentSick
+        case "SICK":
           await markStudentSick(attendanceId);
           break;
-        case "PERMISSION": // Using markStudentPermission
+        case "PERMISSION":
           await markStudentPermission(attendanceId);
           break;
-        case "LATE": // Retained if you still have a specific 'LATE' status in your backend logic, otherwise remove.
-          // If 'LATE' is also considered a variant of 'HADIR' with a timestamp,
-          // you might handle it differently or remove this case if it's not a direct markable status.
-          // For now, assuming you might have a separate markStudentLate. If not, remove.
-          // await markStudentLate(attendanceId); // This was not part of the initial destructuring, consider if it's truly needed or if 'PRESENT' covers it.
-          toast.error("Status 'Terlambat' tidak dapat diubah secara manual."); // Or implement markStudentLate if it exists
-          break;
-        default:
-          console.warn(`Unknown status: ${status}`);
+        case "LATE":
+          toast.error("Status 'Terlambat' tidak dapat diubah secara manual.");
           break;
       }
+
       // Re-fetch session data to update the UI after marking attendance
       const refetchSessionDetails = async () => {
-        if (user?.profileData?.id && sessionId) {
+        if (teacherId && sessionId) {
           try {
             const fetchedSession = await getAttendanceSessions({ sessionId });
             if (
@@ -211,7 +202,7 @@ export default function ActiveSessionDetailPage() {
     }
   };
 
-  // Handle bulk attendance actions
+  // Handle bulk attendance actions (MODIFIED to include SICK and PERMISSION)
   const handleBulkAction = async () => {
     if (!bulkAction || selectedStudents.length === 0) return;
 
@@ -222,32 +213,30 @@ export default function ActiveSessionDetailPage() {
         switch (bulkAction) {
           case "PRESENT":
             return markStudentPresent(attendanceId);
-          case "ALPHA": // Use markStudentAlpha for bulk "Tidak Hadir"
+          case "ALPHA":
             return markStudentAlpha(attendanceId);
-          case "SICK": // Use markStudentSick for bulk "Sakit"
+          case "SICK":
             return markStudentSick(attendanceId);
-          case "PERMISSION": // Use markStudentPermission for bulk "Izin"
+          case "PERMISSION":
             return markStudentPermission(attendanceId);
           case "LATE":
-            // Handle LATE if you have a specific markStudentLate function
-            // or if it's implicitly handled by PRESENT with a check-in time.
-            // For now, we'll give an error if it's selected for bulk as we don't have markStudentLate destructured.
             return Promise.reject(
               "Status 'Terlambat' tidak dapat diubah secara massal."
             );
           default:
-            return Promise.resolve(); // Do nothing for unknown bulk actions
+            return Promise.resolve();
         }
       });
 
-      await Promise.all(bulkPromises); // Wait for all bulk actions to complete
+      await Promise.all(bulkPromises);
+      toast.success("Aksi massal berhasil diterapkan!");
+
       setSelectedStudents([]); // Clear selected students
       setBulkAction(""); // Reset bulk action
-      toast.success("Aksi massal berhasil diterapkan!");
 
       // Re-fetch session data to update the UI after bulk actions
       const refetchSessionDetails = async () => {
-        if (user?.profileData?.id && sessionId) {
+        if (teacherId && sessionId) {
           try {
             const fetchedSession = await getAttendanceSessions({ sessionId });
             if (
@@ -289,7 +278,7 @@ export default function ActiveSessionDetailPage() {
     }
   };
 
-  // Filter attendances based on search and status
+  // Filter attendances based on search and status (MODIFIED to include SICK and PERMISSION)
   const filteredAttendances = useCallback(() => {
     if (!currentSession?.attendances) return [];
 
@@ -334,8 +323,8 @@ export default function ActiveSessionDetailPage() {
     return filtered;
   }, [currentSession, searchTerm, statusFilter]);
 
+  // --- UI RENDERING ---
   // Loading state
-  // Modified loading state to use currentSessionDetails
   if (loading && !currentSessionDetails) {
     return (
       <div className="space-y-6">
@@ -360,8 +349,7 @@ export default function ActiveSessionDetailPage() {
           <div className="flex justify-center space-x-3">
             <button
               onClick={() => {
-                // Trigger re-fetch of current session details
-                if (user?.profileData?.id && sessionId) {
+                if (teacherId && sessionId) {
                   getAttendanceSessions({ sessionId })
                     .then((fetchedSession) => {
                       if (
@@ -399,7 +387,6 @@ export default function ActiveSessionDetailPage() {
 
   // Session not found
   if (!currentSession) {
-    // Use currentSession (which is currentSessionDetails)
     return (
       <div className="space-y-6">
         <div className="card p-6 text-center">
@@ -452,7 +439,7 @@ export default function ActiveSessionDetailPage() {
         <div className="flex items-center space-x-3">
           <button
             onClick={async () => {
-              if (user?.profileData?.id && sessionId) {
+              if (teacherId && sessionId) {
                 try {
                   const fetchedSession = await getAttendanceSessions({
                     sessionId,
@@ -655,39 +642,31 @@ export default function ActiveSessionDetailPage() {
         </div>
       </div>
 
-      {/* Progress Bar */}
-      {stats.total > 0 && (
-        <div className="card p-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-gray-700">
-              Progress Absensi
-            </span>
-            <span className="text-sm font-medium text-gray-900">
-              {Math.round(
-                ((stats.present +
-                  stats.absent +
-                  stats.sick +
-                  stats.permission) /
-                  stats.total) *
-                  100
-              )}{" "}
-              %
-            </span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
-            <div
-              className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500"
-              style={{
-                width: `${
-                  ((stats.present +
-                    stats.absent +
-                    stats.sick +
-                    stats.permission) /
-                    stats.total) *
-                  100
-                }%`,
-              }}
-            />
+      {/* NEW: Geolocation Display Section */}
+      {currentSession.latitude && currentSession.radiusMeters && (
+        <div className="card p-4 bg-orange-50 border-orange-200">
+          <h3 className="text-md font-semibold text-orange-900 mb-2 flex items-center gap-2">
+            <MapPin className="w-5 h-5" /> Geolocation Boundary (Aktif untuk QR)
+          </h3>
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div className="bg-white rounded-lg p-3 border">
+              <p className="text-xs text-gray-500 mb-1">Latitude</p>
+              <p className="font-mono text-sm font-bold text-gray-900">
+                {currentSession.latitude.toFixed(6)}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-3 border">
+              <p className="text-xs text-gray-500 mb-1">Longitude</p>
+              <p className="font-mono text-sm font-bold text-gray-900">
+                {currentSession.longitude.toFixed(6)}
+              </p>
+            </div>
+            <div className="bg-white rounded-lg p-3 border">
+              <p className="text-xs text-gray-500 mb-1">Radius</p>
+              <p className="font-mono text-sm font-bold text-gray-900">
+                {currentSession.radiusMeters} Meter
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -704,7 +683,7 @@ export default function ActiveSessionDetailPage() {
                 placeholder="Cari siswa..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="input-field pl-10 pr-4 py-2 !bg-white !border-gray-300 focus:!border-green-500"
               />
             </div>
 
@@ -712,7 +691,7 @@ export default function ActiveSessionDetailPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="input-field !bg-white !border-gray-300 focus:!border-green-500 py-2 px-3"
             >
               <option value="all">Semua Status</option>
               <option value="pending">Menunggu</option>
@@ -732,19 +711,18 @@ export default function ActiveSessionDetailPage() {
               <select
                 value={bulkAction}
                 onChange={(e) => setBulkAction(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="input-field !bg-white !border-gray-300 py-2 px-3"
               >
                 <option value="">Pilih Aksi</option>
                 <option value="PRESENT">Tandai Hadir</option>
                 <option value="ALPHA">Tandai Tidak Hadir (Alpha)</option>
                 <option value="SICK">Tandai Sakit</option>
                 <option value="PERMISSION">Tandai Izin</option>
-                {/* Removed LATE from bulk action as it might not be a direct 'mark' status or could be inferred */}
               </select>
               <button
                 onClick={handleBulkAction}
                 disabled={!bulkAction}
-                className="btn-primary btn-sm"
+                className="btn-primary btn-sm disabled:opacity-50"
               >
                 Terapkan
               </button>
@@ -788,7 +766,7 @@ export default function ActiveSessionDetailPage() {
                         );
                       }
                     }}
-                    className="rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    className="rounded border-gray-300 text-green-600 focus:ring-green-500 w-5 h-5"
                   />
 
                   <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center text-white font-medium">
@@ -852,9 +830,9 @@ export default function ActiveSessionDetailPage() {
 
                   {(attendance.status === "PENDING" ||
                     !attendance.status ||
-                    attendance.status === "ALPHA" || // Allow manual change from Alpha
-                    attendance.status === "SAKIT" || // Allow manual change from Sakit
-                    attendance.status === "IZIN") && ( // Allow manual change from Izin
+                    attendance.status === "ALPHA" ||
+                    attendance.status === "SAKIT" ||
+                    attendance.status === "IZIN") && (
                     <div className="flex items-center space-x-1">
                       {/* Mark Present */}
                       <button
@@ -867,7 +845,7 @@ export default function ActiveSessionDetailPage() {
                         <CheckCircle className="w-4 h-4" />
                       </button>
 
-                      {/* Mark Absent/Alpha - Now uses ALPHA specifically */}
+                      {/* Mark Absent/Alpha */}
                       <button
                         onClick={() =>
                           handleMarkAttendance(attendance.id, "ALPHA")
