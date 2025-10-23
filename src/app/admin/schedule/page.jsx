@@ -4,15 +4,12 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Plus,
   Search,
-  Filter,
-  Calendar,
+  AlertTriangle,
   Clock,
   Users,
   BookOpen,
   Edit,
   Trash2,
-  Eye,
-  AlertTriangle,
   X,
 } from "lucide-react";
 import {
@@ -33,7 +30,6 @@ const DAYS = [
   { value: "SABTU", label: "Sabtu" },
 ];
 
-// Generate time slots with proper format
 const generateTimeSlots = () => {
   const slots = [];
   for (let hour = 7; hour <= 17; hour++) {
@@ -58,12 +54,9 @@ export default function AdminSchedulesPage() {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [showConflictModal, setShowConflictModal] = useState(false);
-
-  // State for filtered teachers based on selected subject
   const [filteredTeachers, setFilteredTeachers] = useState([]);
   const [loadingTeachers, setLoadingTeachers] = useState(false);
 
-  // Form state - Updated to match API structure
   const [formData, setFormData] = useState({
     classId: "",
     subjectId: "",
@@ -73,7 +66,6 @@ export default function AdminSchedulesPage() {
     endTime: "",
   });
 
-  // Hooks
   const {
     schedules,
     pagination,
@@ -82,20 +74,16 @@ export default function AdminSchedulesPage() {
     conflictData,
     changePage,
     changeLimit,
-    filter,
     create,
     update,
     remove,
-    getById,
     refetch,
     clearConflicts,
   } = useScheduleManagement();
 
   const { subjects } = useSubjectManagement();
-  const { teachers } = useTeacherManagement();
   const { classes } = useClassManagement();
 
-  // Function to get teachers by subject
   const getTeachersBySubject = useCallback(async (subjectId) => {
     if (!subjectId) {
       setFilteredTeachers([]);
@@ -104,26 +92,11 @@ export default function AdminSchedulesPage() {
 
     try {
       setLoadingTeachers(true);
-      console.log(`Fetching teachers for subject ID: ${subjectId}`);
-
-      // Use the subject API to get teachers assigned to the subject
       const response = await subjectAPI.getSubjectTeachers(subjectId);
-      console.log("Teachers response:", response.data);
-
       const teachersData = response.data?.teachers || [];
       setFilteredTeachers(teachersData);
-
-      if (teachersData.length === 0) {
-        console.log(`No teachers found for subject ${subjectId}`);
-      } else {
-        console.log(
-          `Found ${teachersData.length} teachers for subject ${subjectId}`
-        );
-      }
     } catch (error) {
       console.error("Error fetching teachers for subject:", error);
-
-      // Show specific error message
       if (error.response?.status === 404) {
         toast.error("Mata pelajaran tidak ditemukan");
       } else if (error.response?.status === 500) {
@@ -131,26 +104,21 @@ export default function AdminSchedulesPage() {
       } else {
         toast.error("Gagal memuat guru untuk mata pelajaran ini");
       }
-
-      // Set empty array on error
       setFilteredTeachers([]);
     } finally {
       setLoadingTeachers(false);
     }
   }, []);
 
-  // Effect to filter teachers when subject changes
   useEffect(() => {
     if (formData.subjectId) {
       getTeachersBySubject(formData.subjectId);
-      // Reset teacher selection when subject changes
       setFormData((prev) => ({ ...prev, teacherId: "" }));
     } else {
       setFilteredTeachers([]);
     }
   }, [formData.subjectId, getTeachersBySubject]);
 
-  // Filter schedules based on search and filters
   const filteredSchedules = schedules.filter((schedule) => {
     const matchesSearch =
       !searchTerm ||
@@ -171,7 +139,6 @@ export default function AdminSchedulesPage() {
     return matchesSearch && matchesDay && matchesClass && matchesSubject;
   });
 
-  // Reset form data - Updated to match API structure
   const resetFormData = () => {
     setFormData({
       classId: "",
@@ -184,7 +151,6 @@ export default function AdminSchedulesPage() {
     setFilteredTeachers([]);
   };
 
-  // Handle create
   const handleCreate = () => {
     setModalMode("create");
     setSelectedSchedule(null);
@@ -192,22 +158,17 @@ export default function AdminSchedulesPage() {
     setShowModal(true);
   };
 
-  // Format time to HH:MM format for form display
   const formatTimeForForm = (time) => {
     if (!time) return "";
-    // If time is already in HH:MM format, return as is
     if (time.match(/^\d{2}:\d{2}$/)) return time;
-    // If time includes seconds, remove them
     if (time.match(/^\d{2}:\d{2}:\d{2}$/)) return time.substring(0, 5);
     return time;
   };
 
-  // Handle edit - Updated to match API structure
   const handleEdit = async (schedule) => {
     setModalMode("edit");
     setSelectedSchedule(schedule);
 
-    // Populate form with existing data
     setFormData({
       classId: schedule.classId || "",
       subjectId: schedule.subjectId || "",
@@ -217,7 +178,6 @@ export default function AdminSchedulesPage() {
       endTime: formatTimeForForm(schedule.endTime),
     });
 
-    // Load teachers for the selected subject
     if (schedule.subjectId) {
       await getTeachersBySubject(schedule.subjectId);
     }
@@ -225,7 +185,6 @@ export default function AdminSchedulesPage() {
     setShowModal(true);
   };
 
-  // Handle delete
   const handleDelete = async (schedule) => {
     if (
       window.confirm(
@@ -243,10 +202,8 @@ export default function AdminSchedulesPage() {
     }
   };
 
-  // Validate form data - Updated validation
   const validateFormData = () => {
     const errors = [];
-
     if (!formData.classId) errors.push("Kelas harus dipilih");
     if (!formData.subjectId) errors.push("Mata pelajaran harus dipilih");
     if (!formData.teacherId) errors.push("Guru harus dipilih");
@@ -254,31 +211,25 @@ export default function AdminSchedulesPage() {
     if (!formData.startTime) errors.push("Waktu mulai harus dipilih");
     if (!formData.endTime) errors.push("Waktu selesai harus dipilih");
 
-    // Validate time logic
     if (formData.startTime && formData.endTime) {
       const start = new Date(`2000-01-01T${formData.startTime}:00`);
       const end = new Date(`2000-01-01T${formData.endTime}:00`);
-
       if (start >= end) {
         errors.push("Waktu mulai harus lebih awal dari waktu selesai");
       }
     }
-
     return errors;
   };
 
-  // Handle form submit - Updated to send correct data structure
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate form
     const validationErrors = validateFormData();
     if (validationErrors.length > 0) {
       toast.error(validationErrors.join("\n"));
       return;
     }
 
-    // Prepare data according to API structure
     const submitData = {
       subjectId: formData.subjectId,
       classId: formData.classId,
@@ -313,7 +264,6 @@ export default function AdminSchedulesPage() {
     }
   };
 
-  // Handle input change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -322,18 +272,15 @@ export default function AdminSchedulesPage() {
     }));
   };
 
-  // Format time for display
   const formatTime = (time) => {
     return time ? time.substring(0, 5) : "";
   };
 
-  // Get day label
   const getDayLabel = (day) => {
     const dayObj = DAYS.find((d) => d.value === day);
     return dayObj ? dayObj.label : day;
   };
 
-  // Close modal
   const closeModal = () => {
     setShowModal(false);
     setSelectedSchedule(null);
@@ -341,219 +288,247 @@ export default function AdminSchedulesPage() {
     resetFormData();
   };
 
-  // Close conflict modal
   const closeConflictModal = () => {
     setShowConflictModal(false);
     clearConflicts();
   };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Manajemen Jadwal</h1>
-          <p className="text-gray-600 mt-1">Kelola jadwal pelajaran sekolah</p>
-        </div>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <Plus size={20} />
-          Tambah Jadwal
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={20}
-            />
-            <input
-              type="text"
-              placeholder="Cari jadwal..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* Day Filter */}
-          <select
-            value={selectedDay}
-            onChange={(e) => setSelectedDay(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Semua Hari</option>
-            {DAYS.map((day) => (
-              <option key={day.value} value={day.value}>
-                {day.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Class Filter */}
-          <select
-            value={selectedClass}
-            onChange={(e) => setSelectedClass(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Semua Kelas</option>
-            {classes?.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name}
-              </option>
-            ))}
-          </select>
-
-          {/* Subject Filter */}
-          <select
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Semua Mata Pelajaran</option>
-            {subjects?.map((subject) => (
-              <option key={subject.id} value={subject.id}>
-                {subject.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Schedule List */}
-      <div className="bg-white rounded-lg shadow-sm border">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-gray-600 mt-2">Memuat jadwal...</p>
-          </div>
-        ) : error ? (
-          <div className="p-8 text-center text-red-600">
-            <AlertTriangle size={48} className="mx-auto mb-4" />
-            <p>{error}</p>
-            <button
-              onClick={refetch}
-              className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-            >
-              Coba Lagi
+    <div className="min-h-screen gradient-bg p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header dengan glass effect */}
+        <div className="glass-effect rounded-xl p-6 mb-6 animate-fade-in shadow-blue">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-gradient mb-2">
+                Manajemen Jadwal
+              </h1>
+              <p className="text-gray-600">
+                Kelola jadwal pelajaran sekolah dengan mudah dan efisien
+              </p>
+            </div>
+            <button onClick={handleCreate} className="btn-primary">
+              <Plus size={20} />
+              Tambah Jadwal
             </button>
           </div>
-        ) : (
-          <>
-            {/* Table Header */}
-            <div className="grid grid-cols-6 gap-4 p-4 bg-gray-50 border-b font-medium text-gray-700">
-              <div>Hari</div>
-              <div>Waktu</div>
-              <div>Kelas</div>
-              <div>Mata Pelajaran</div>
-              <div>Guru</div>
-              <div>Aksi</div>
-            </div>
+        </div>
 
-            {/* Table Body */}
-            {filteredSchedules.length === 0 ? (
-              <div className="p-8 text-center text-gray-500">
-                <Calendar size={48} className="mx-auto mb-4 opacity-50" />
-                <p>Tidak ada jadwal yang ditemukan</p>
+        {/* Filters Card */}
+        <div
+          className="card mb-6 animate-fade-in-up"
+          style={{ animationDelay: "0.1s" }}
+        >
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500"
+                  size={20}
+                />
+                <input
+                  type="text"
+                  placeholder="Cari jadwal..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="input-field pl-10"
+                />
               </div>
-            ) : (
-              <div className="divide-y divide-gray-200">
-                {filteredSchedules.map((schedule) => (
-                  <div
-                    key={schedule.id}
-                    className="grid grid-cols-6 gap-4 p-4 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="font-medium">
-                      {getDayLabel(schedule.day)}
+
+              <select
+                value={selectedDay}
+                onChange={(e) => setSelectedDay(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Semua Hari</option>
+                {DAYS.map((day) => (
+                  <option key={day.value} value={day.value}>
+                    {day.label}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedClass}
+                onChange={(e) => setSelectedClass(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Semua Kelas</option>
+                {classes?.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </option>
+                ))}
+              </select>
+
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="input-field"
+              >
+                <option value="">Semua Mata Pelajaran</option>
+                {subjects?.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Schedule List Card */}
+        <div
+          className="card animate-fade-in-up"
+          style={{ animationDelay: "0.2s" }}
+        >
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 font-medium">Memuat jadwal...</p>
+            </div>
+          ) : error ? (
+            <div className="p-12 text-center">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                <AlertTriangle className="text-red-600" size={32} />
+              </div>
+              <p className="text-red-600 font-medium mb-4">{error}</p>
+              <button onClick={refetch} className="btn-primary">
+                Coba Lagi
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Table Header */}
+              <div className="grid grid-cols-6 gap-4 p-4 border-b-2 border-blue-100 font-semibold text-blue-800 bg-gradient-to-r from-blue-50 to-white">
+                <div>Hari</div>
+                <div>Waktu</div>
+                <div>Kelas</div>
+                <div>Mata Pelajaran</div>
+                <div>Guru</div>
+                <div>Aksi</div>
+              </div>
+              {filteredSchedules.length === 0 ? (
+                <div className="p-12 text-center">
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-50 rounded-full mb-4">
+                    <Clock size={40} className="text-blue-400" />
+                  </div>
+                  <p className="text-gray-500 font-medium">
+                    Tidak ada jadwal yang ditemukan
+                  </p>
+                  <p className="text-gray-400 text-sm mt-1">
+                    Coba ubah filter atau tambah jadwal baru
+                  </p>
+                </div>
+              ) : (
+                <div className="divide-y divide-blue-50">
+                  {filteredSchedules.map((schedule, index) => (
+                    <div
+                      key={schedule.id}
+                      className="grid grid-cols-6 gap-4 p-4 hover:bg-gradient-to-r hover:from-blue-50 hover:to-transparent transition-all duration-300"
+                      style={{
+                        animation: "fadeIn 0.5s ease-out",
+                        animationDelay: `${index * 0.05}s`,
+                        animationFillMode: "backwards",
+                      }}
+                    >
+                      <div className="font-semibold text-blue-700">
+                        {getDayLabel(schedule.day)}
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Clock size={16} className="text-blue-500" />
+                        <span className="font-medium">
+                          {formatTime(schedule.startTime)} -{" "}
+                          {formatTime(schedule.endTime)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <Users size={16} className="text-blue-500" />
+                        {schedule.class?.name || "-"}
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-700">
+                        <BookOpen size={16} className="text-blue-500" />
+                        {schedule.subject?.name || "-"}
+                      </div>
+                      <div className="text-gray-700">
+                        {schedule.teacher?.name || "-"}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleEdit(schedule)}
+                          className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-all duration-300 hover:scale-110"
+                          title="Edit"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(schedule)}
+                          className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-all duration-300 hover:scale-110"
+                          title="Hapus"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Clock size={16} className="text-gray-400" />
-                      {formatTime(schedule.startTime)} -{" "}
-                      {formatTime(schedule.endTime)}
+                  ))}
+                </div>
+              )}
+
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="p-4 border-t-2 border-blue-100 bg-gradient-to-r from-white to-blue-50">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-gray-600 font-medium">
+                      Menampilkan {(pagination.page - 1) * pagination.limit + 1}
+                      -
+                      {Math.min(
+                        pagination.page * pagination.limit,
+                        pagination.total
+                      )}{" "}
+                      dari{" "}
+                      <span className="text-blue-600 font-semibold">
+                        {pagination.total}
+                      </span>{" "}
+                      jadwal
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Users size={16} className="text-gray-400" />
-                      {schedule.class?.name || "-"}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <BookOpen size={16} className="text-gray-400" />
-                      {schedule.subject?.name || "-"}
-                    </div>
-                    <div>{schedule.teacher?.name || "-"}</div>
                     <div className="flex items-center gap-2">
                       <button
-                        onClick={() => handleEdit(schedule)}
-                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Edit"
+                        onClick={() => changePage(pagination.page - 1)}
+                        disabled={pagination.page <= 1}
+                        className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Edit size={16} />
+                        Sebelumnya
                       </button>
+                      <span className="px-4 py-2 text-sm font-semibold text-blue-700 bg-blue-50 border-2 border-blue-200 rounded-lg">
+                        Halaman {pagination.page} dari {pagination.totalPages}
+                      </span>
                       <button
-                        onClick={() => handleDelete(schedule)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Hapus"
+                        onClick={() => changePage(pagination.page + 1)}
+                        disabled={pagination.page >= pagination.totalPages}
+                        className="btn-secondary text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Trash2 size={16} />
+                        Selanjutnya
                       </button>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="p-4 border-t flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  Menampilkan {(pagination.page - 1) * pagination.limit + 1}-
-                  {Math.min(
-                    pagination.page * pagination.limit,
-                    pagination.total
-                  )}{" "}
-                  dari {pagination.total} jadwal
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => changePage(pagination.page - 1)}
-                    disabled={pagination.page <= 1}
-                    className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Sebelumnya
-                  </button>
-                  <span className="px-3 py-1">
-                    Halaman {pagination.page} dari {pagination.totalPages}
-                  </span>
-                  <button
-                    onClick={() => changePage(pagination.page + 1)}
-                    disabled={pagination.page >= pagination.totalPages}
-                    className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Selanjutnya
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
+              )}
+            </>
+          )}
+        </div>
       </div>
 
-      {/* Schedule Modal - Enhanced with auto-filtering */}
+      {/* Schedule Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl m-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold">
-                {modalMode === "create" ? "Tambah Jadwal" : "Edit Jadwal"}
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="card w-full max-w-2xl m-4 max-h-[90vh] overflow-y-auto shadow-purple animate-fade-in-up">
+            <div className="flex items-center justify-between p-6 border-b-2 border-blue-100 bg-gradient-to-r from-blue-50 to-white">
+              <h2 className="text-2xl font-bold text-gradient">
+                {modalMode === "create" ? "Tambah Jadwal Baru" : "Edit Jadwal"}
               </h2>
               <button
                 onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-all duration-300 hover:rotate-90"
               >
                 <X size={24} />
               </button>
@@ -562,16 +537,19 @@ export default function AdminSchedulesPage() {
             <form onSubmit={handleSubmit} className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Class */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Kelas *
+                <div
+                  className="animate-slide-in-left"
+                  style={{ animationDelay: "0.1s" }}
+                >
+                  <label className="block text-sm font-semibold text-blue-800 mb-2">
+                    Kelas <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="classId"
                     value={formData.classId}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   >
                     <option value="">Pilih Kelas</option>
                     {classes?.map((cls) => (
@@ -582,17 +560,20 @@ export default function AdminSchedulesPage() {
                   </select>
                 </div>
 
-                {/* Subject - Now triggers teacher filtering */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mata Pelajaran *
+                {/* Subject */}
+                <div
+                  className="animate-slide-in-right"
+                  style={{ animationDelay: "0.1s" }}
+                >
+                  <label className="block text-sm font-semibold text-blue-800 mb-2">
+                    Mata Pelajaran <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="subjectId"
                     value={formData.subjectId}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   >
                     <option value="">Pilih Mata Pelajaran</option>
                     {subjects?.map((subject) => (
@@ -603,12 +584,15 @@ export default function AdminSchedulesPage() {
                   </select>
                 </div>
 
-                {/* Teacher - Now shows filtered teachers based on subject */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Guru *
+                {/* Teacher */}
+                <div
+                  className="animate-slide-in-left"
+                  style={{ animationDelay: "0.2s" }}
+                >
+                  <label className="block text-sm font-semibold text-blue-800 mb-2">
+                    Guru <span className="text-red-500">*</span>
                     {loadingTeachers && (
-                      <span className="text-xs text-blue-600 ml-2">
+                      <span className="text-xs text-blue-600 ml-2 animate-pulse">
                         (Memuat guru...)
                       </span>
                     )}
@@ -619,7 +603,7 @@ export default function AdminSchedulesPage() {
                     onChange={handleInputChange}
                     required
                     disabled={!formData.subjectId || loadingTeachers}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                    className="input-field disabled:opacity-100 disabled:bg-gray-50 disabled:cursor-not-allowed"
                   >
                     <option value="">
                       {!formData.subjectId
@@ -639,25 +623,27 @@ export default function AdminSchedulesPage() {
                   {formData.subjectId &&
                     filteredTeachers.length === 0 &&
                     !loadingTeachers && (
-                      <p className="text-xs text-amber-600 mt-1">
-                        Belum ada guru yang ditugaskan untuk mata pelajaran ini.
-                        Silakan assign guru ke mata pelajaran terlebih dahulu di
-                        menu Mata Pelajaran.
+                      <p className="text-xs text-amber-600 mt-2 bg-amber-50 p-2 rounded-lg border border-amber-200">
+                        ⚠️ Belum ada guru yang ditugaskan untuk mata pelajaran
+                        ini. Silakan assign guru terlebih dahulu.
                       </p>
                     )}
                 </div>
 
                 {/* Day */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Hari *
+                <div
+                  className="animate-slide-in-right"
+                  style={{ animationDelay: "0.2s" }}
+                >
+                  <label className="block text-sm font-semibold text-blue-800 mb-2">
+                    Hari <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="day"
                     value={formData.day}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   >
                     <option value="">Pilih Hari</option>
                     {DAYS.map((day) => (
@@ -669,16 +655,19 @@ export default function AdminSchedulesPage() {
                 </div>
 
                 {/* Start Time */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Waktu Mulai *
+                <div
+                  className="animate-slide-in-left"
+                  style={{ animationDelay: "0.3s" }}
+                >
+                  <label className="block text-sm font-semibold text-blue-800 mb-2">
+                    Waktu Mulai <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="startTime"
                     value={formData.startTime}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   >
                     <option value="">Pilih Waktu</option>
                     {TIME_SLOTS.map((time) => (
@@ -690,16 +679,19 @@ export default function AdminSchedulesPage() {
                 </div>
 
                 {/* End Time */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Waktu Selesai *
+                <div
+                  className="animate-slide-in-right"
+                  style={{ animationDelay: "0.3s" }}
+                >
+                  <label className="block text-sm font-semibold text-blue-800 mb-2">
+                    Waktu Selesai <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="endTime"
                     value={formData.endTime}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="input-field"
                   >
                     <option value="">Pilih Waktu</option>
                     {TIME_SLOTS.filter(
@@ -713,24 +705,24 @@ export default function AdminSchedulesPage() {
                 </div>
               </div>
 
-              <div className="flex justify-end gap-4 mt-6">
+              <div className="flex justify-end gap-4 mt-8 pt-6 border-t-2 border-blue-100">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="btn-secondary"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={loading || loadingTeachers}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading || loadingTeachers
                     ? "Menyimpan..."
                     : modalMode === "create"
-                    ? "Tambah"
-                    : "Simpan"}
+                    ? "Tambah Jadwal"
+                    : "Simpan Perubahan"}
                 </button>
               </div>
             </form>
@@ -740,68 +732,82 @@ export default function AdminSchedulesPage() {
 
       {/* Conflict Modal */}
       {showConflictModal && conflictData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md m-4">
-            <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-semibold text-red-600">
+        <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+          <div className="card w-full max-w-md m-4 shadow-purple animate-fade-in-up">
+            <div className="flex items-center justify-between p-6 border-b-2 border-red-100 bg-gradient-to-r from-red-50 to-white">
+              <h2 className="text-2xl font-bold text-red-600 flex items-center gap-2">
+                <AlertTriangle size={28} />
                 Konflik Jadwal
               </h2>
               <button
                 onClick={closeConflictModal}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-all duration-300 hover:rotate-90"
               >
                 <X size={24} />
               </button>
             </div>
 
             <div className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <AlertTriangle className="text-red-500" size={24} />
-                <p className="text-gray-700">
-                  Jadwal yang Anda buat bertabrakan dengan jadwal yang sudah
-                  ada:
-                </p>
-              </div>
+              <p className="text-gray-700 mb-4 font-medium">
+                Jadwal yang Anda buat bertabrakan dengan jadwal yang sudah ada:
+              </p>
 
-              <div className="space-y-3">
+              <div className="space-y-3 max-h-[60vh] overflow-y-auto">
                 {conflictData.conflicts?.classConflicts?.map(
                   (conflict, index) => (
-                    <div key={index} className="bg-red-50 p-3 rounded-lg">
-                      <p className="font-medium text-red-700">Konflik Kelas:</p>
-                      <p className="text-sm text-red-600">
-                        {conflict.subject?.name} - {conflict.class?.name}
-                        <br />
-                        {getDayLabel(conflict.day)},{" "}
-                        {formatTime(conflict.startTime)} -{" "}
-                        {formatTime(conflict.endTime)}
+                    <div
+                      key={index}
+                      className="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-xl border-2 border-red-200 animate-fade-in"
+                      style={{ animationDelay: `${index * 0.1}s` }}
+                    >
+                      <p className="font-bold text-red-700 mb-2 flex items-center gap-2">
+                        <Users size={16} />
+                        Konflik Kelas
                       </p>
+                      <div className="text-sm text-red-600 space-y-1">
+                        <p className="font-semibold">
+                          {conflict.subject?.name} - {conflict.class?.name}
+                        </p>
+                        <p className="flex items-center gap-1">
+                          <Clock size={14} />
+                          {getDayLabel(conflict.day)},{" "}
+                          {formatTime(conflict.startTime)} -{" "}
+                          {formatTime(conflict.endTime)}
+                        </p>
+                      </div>
                     </div>
                   )
                 ) || []}
 
                 {conflictData.conflicts?.teacherConflicts?.map(
                   (conflict, index) => (
-                    <div key={index} className="bg-orange-50 p-3 rounded-lg">
-                      <p className="font-medium text-orange-700">
-                        Konflik Guru:
+                    <div
+                      key={index}
+                      className="bg-gradient-to-r from-orange-50 to-orange-100 p-4 rounded-xl border-2 border-orange-200 animate-fade-in"
+                      style={{ animationDelay: `${index * 0.1 + 0.2}s` }}
+                    >
+                      <p className="font-bold text-orange-700 mb-2 flex items-center gap-2">
+                        <BookOpen size={16} />
+                        Konflik Guru
                       </p>
-                      <p className="text-sm text-orange-600">
-                        {conflict.teacher?.name} - {conflict.subject?.name}
-                        <br />
-                        {getDayLabel(conflict.day)},{" "}
-                        {formatTime(conflict.startTime)} -{" "}
-                        {formatTime(conflict.endTime)}
-                      </p>
+                      <div className="text-sm text-orange-600 space-y-1">
+                        <p className="font-semibold">
+                          {conflict.teacher?.name} - {conflict.subject?.name}
+                        </p>
+                        <p className="flex items-center gap-1">
+                          <Clock size={14} />
+                          {getDayLabel(conflict.day)},{" "}
+                          {formatTime(conflict.startTime)} -{" "}
+                          {formatTime(conflict.endTime)}
+                        </p>
+                      </div>
                     </div>
                   )
                 ) || []}
               </div>
 
-              <div className="flex justify-end gap-4 mt-6">
-                <button
-                  onClick={closeConflictModal}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg"
-                >
+              <div className="flex justify-end gap-4 mt-6 pt-6 border-t-2 border-red-100">
+                <button onClick={closeConflictModal} className="btn-secondary">
                   Tutup
                 </button>
               </div>

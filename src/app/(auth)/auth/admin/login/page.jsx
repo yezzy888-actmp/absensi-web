@@ -130,24 +130,26 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="gradient-bg min-h-screen flex items-center justify-center p-4 page-transition">
+      <div className="w-full max-w-md animate-fade-in-up">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-4 shadow-blue pulse-ring">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-3xl font-bold text-gradient mb-2">
             Login Administrator
           </h1>
-          <p className="text-gray-600">Masuk ke panel administrasi sistem</p>
+          <p className="text-muted-foreground">
+            Masuk ke panel administrasi sistem
+          </p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        <div className="card p-8">
           {/* Server Error Display */}
           {serverError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg animate-fade-in">
               <div className="flex items-center text-sm text-red-600">
                 <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span>{serverError}</span>
@@ -160,13 +162,13 @@ export default function AdminLoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-semibold text-foreground mb-2"
               >
                 Email Administrator
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                  <Mail className="h-5 w-5 text-blue-500" />
                 </div>
                 <input
                   id="email"
@@ -174,10 +176,10 @@ export default function AdminLoginPage() {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                  className={`input-field pl-10 relative ${
                     errors.email
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 bg-white"
+                      ? "border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500"
+                      : ""
                   }`}
                   placeholder="admin@sekolah.com"
                   disabled={loading || isSubmitting}
@@ -185,7 +187,7 @@ export default function AdminLoginPage() {
                 />
               </div>
               {errors.email && (
-                <div className="mt-2 flex items-center text-sm text-red-600">
+                <div className="mt-2 flex items-center text-sm text-red-600 animate-fade-in">
                   <AlertCircle className="w-4 h-4 mr-1 flex-shrink-0" />
                   {errors.email}
                 </div>
@@ -196,13 +198,13 @@ export default function AdminLoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-semibold text-foreground mb-2"
               >
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                  <Lock className="h-5 w-5 text-blue-500" />
                 </div>
                 <input
                   id="password"
@@ -210,10 +212,10 @@ export default function AdminLoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors ${
+                  className={`input-field pl-10 pr-12 relative ${
                     errors.password
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 bg-white"
+                      ? "border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500"
+                      : ""
                   }`}
                   placeholder="Masukkan password"
                   disabled={loading || isSubmitting}
@@ -222,19 +224,19 @@ export default function AdminLoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-gray-50 rounded-r-lg transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-blue-50 rounded-r-lg transition-colors z-10"
                   disabled={loading || isSubmitting}
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeOff className="h-5 w-5 text-blue-500 hover:text-blue-600 transition-colors" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <Eye className="h-5 w-5 text-blue-500 hover:text-blue-600 transition-colors" />
                   )}
                 </button>
               </div>
               {errors.password && (
-                <div className="mt-2 flex items-center text-sm text-red-600">
+                <div className="mt-2 flex items-center text-sm text-red-600 animate-fade-in">
                   <AlertCircle className="w-4 h-4 mr-1 flex-shrink-0" />
                   {errors.password}
                 </div>
@@ -245,31 +247,31 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading || isSubmitting}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="btn-primary w-full py-3 flex items-center justify-center"
             >
               {loading || isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Sedang masuk...
+                  <span>Sedang masuk...</span>
                 </>
               ) : (
                 <>
                   <Shield className="w-5 h-5 mr-2" />
-                  Masuk sebagai Admin
+                  <span>Masuk sebagai Admin</span>
                 </>
               )}
             </button>
           </form>
 
           {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="text-center text-sm text-gray-500">
+          <div className="mt-8 pt-6 border-t-2 border-border">
+            <div className="text-center text-sm text-muted-foreground font-medium">
               Login sebagai peran lain?
             </div>
-            <div className="mt-3 flex justify-center space-x-4">
+            <div className="mt-4 flex justify-center">
               <Link
                 href="/auth/teacher/login"
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors hover:underline"
+                className="btn-secondary text-sm px-6 py-2 inline-flex items-center justify-center"
               >
                 Login Guru
               </Link>
@@ -278,9 +280,9 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>© 2024 Sistem Manajemen Sekolah</p>
-          <p className="mt-1">
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          <p className="font-medium">© 2024 Sistem Manajemen Sekolah</p>
+          <p className="mt-2">
             Hubungi administrator jika mengalami kendala login
           </p>
         </div>

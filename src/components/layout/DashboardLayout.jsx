@@ -1,4 +1,4 @@
-// src/components/layout/DashboardLayout.js
+// src/components/layout/DashboardLayout.jsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -61,6 +61,15 @@ const DashboardLayout = ({ children, userRole = "admin" }) => {
         {/* Footer */}
         <Footer userRole={userRole} />
       </div>
+
+      {/* Overlay untuk mobile ketika sidebar terbuka */}
+      {isMobile && isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-blue-900/20 backdrop-blur-sm z-30 lg:hidden"
+          onClick={closeSidebar}
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
 };

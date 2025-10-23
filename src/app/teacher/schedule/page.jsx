@@ -117,15 +117,15 @@ export default function TeacherSchedulePage() {
   const getSubjectColor = (subjectName) => {
     const colors = {
       Matematika: "bg-blue-500",
-      Biologi: "bg-green-500",
-      Fisika: "bg-purple-500",
-      Kimia: "bg-red-500",
-      "Bahasa Indonesia": "bg-yellow-500",
-      "Bahasa Inggris": "bg-indigo-500",
-      Sejarah: "bg-orange-500",
-      Geografi: "bg-teal-500",
+      Biologi: "bg-blue-400",
+      Fisika: "bg-blue-600",
+      Kimia: "bg-blue-700",
+      "Bahasa Indonesia": "bg-blue-500",
+      "Bahasa Inggris": "bg-blue-600",
+      Sejarah: "bg-blue-400",
+      Geografi: "bg-blue-500",
     };
-    return colors[subjectName] || "bg-gray-500";
+    return colors[subjectName] || "bg-blue-500";
   };
 
   // Check if schedule item is currently active
@@ -160,12 +160,12 @@ export default function TeacherSchedulePage() {
 
     return (
       <div
-        className={`card p-4 border-l-4 transition-all duration-200 hover:shadow-md ${
+        className={`card p-4 border-l-4 transition-all duration-200 hover:shadow-lg ${
           isActive
-            ? "border-l-green-500 bg-green-50/50"
+            ? "border-l-blue-600 bg-gradient-to-r from-blue-50 to-blue-100"
             : isUpcoming
-            ? "border-l-blue-500 bg-blue-50/50"
-            : "border-l-gray-300"
+            ? "border-l-blue-500 bg-gradient-to-r from-blue-50/50 to-blue-100/50"
+            : "border-l-blue-300"
         }`}
       >
         <div className="flex items-center justify-between">
@@ -176,38 +176,38 @@ export default function TeacherSchedulePage() {
                   schedule.subject.name
                 )}`}
               />
-              <h3 className="font-semibold text-gray-900">
+              <h3 className="font-semibold text-blue-900">
                 {schedule.subject.name}
               </h3>
               {isActive && (
-                <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                <span className="px-2 py-1 text-xs font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full shadow-md">
                   Sedang Berlangsung
                 </span>
               )}
               {isUpcoming && (
-                <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                <span className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-700 rounded-full border border-blue-300">
                   Akan Datang
                 </span>
               )}
             </div>
 
-            <div className="space-y-1 text-sm text-gray-600">
+            <div className="space-y-1 text-sm text-blue-700">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
+                  <Clock className="w-4 h-4 text-blue-500" />
                   <span>
                     {getTimeRange(schedule.startTime, schedule.endTime)}
                   </span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Users className="w-4 h-4" />
+                  <Users className="w-4 h-4 text-blue-500" />
                   <span>Kelas {schedule.class.name}</span>
                 </div>
               </div>
 
               {!isCompact && schedule.room && (
                 <div className="flex items-center space-x-1">
-                  <MapPin className="w-4 h-4" />
+                  <MapPin className="w-4 h-4 text-blue-500" />
                   <span>{schedule.room}</span>
                 </div>
               )}
@@ -216,7 +216,7 @@ export default function TeacherSchedulePage() {
 
           {!isCompact && (
             <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">
+              <div className="text-sm font-medium text-blue-900">
                 {schedule.dayName || dayNames[schedule.day]}
               </div>
             </div>
@@ -224,10 +224,10 @@ export default function TeacherSchedulePage() {
         </div>
 
         {!isCompact && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <div className="flex items-center justify-between text-xs text-blue-600">
               <span>ID: {schedule.id.slice(0, 8)}...</span>
-              <button className="text-green-600 hover:text-green-700 font-medium">
+              <button className="text-blue-600 hover:text-blue-700 font-semibold hover:underline">
                 Detail
               </button>
             </div>
@@ -247,23 +247,26 @@ export default function TeacherSchedulePage() {
           const isToday = day === currentDay;
 
           return (
-            <div key={day} className="card p-6">
+            <div
+              key={day}
+              className="card p-6 border-2 border-blue-200 hover:border-blue-300 transition-colors"
+            >
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <h3
-                    className={`text-lg font-semibold ${
-                      isToday ? "text-green-600" : "text-gray-900"
+                    className={`text-lg font-bold ${
+                      isToday ? "text-blue-600" : "text-blue-900"
                     }`}
                   >
                     {dayNames[day]}
                   </h3>
                   {isToday && (
-                    <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+                    <span className="px-3 py-1 text-xs font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full shadow-md">
                       Hari Ini
                     </span>
                   )}
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
                   {daySchedule.length} Sesi
                 </div>
               </div>
@@ -279,9 +282,11 @@ export default function TeacherSchedulePage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Calendar className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p>Tidak ada Sesi hari ini</p>
+                <div className="text-center py-8 text-blue-600">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Calendar className="w-8 h-8 text-blue-500" />
+                  </div>
+                  <p className="font-medium">Tidak ada sesi hari ini</p>
                 </div>
               )}
             </div>
@@ -298,12 +303,12 @@ export default function TeacherSchedulePage() {
 
     return (
       <div className="space-y-4">
-        <div className="card p-6">
+        <div className="card p-6 border-2 border-blue-200">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-gray-900">
+            <h3 className="text-xl font-bold text-blue-900">
               Jadwal {dayNames[selectedDay]}
             </h3>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
               {selectedDaySchedule.length} Sesi
             </div>
           </div>
@@ -315,9 +320,13 @@ export default function TeacherSchedulePage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-gray-500">
-              <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-lg">Tidak ada Sesi</p>
+            <div className="text-center py-12 text-blue-600">
+              <div className="w-24 h-24 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-12 h-12 text-blue-500" />
+              </div>
+              <p className="text-lg font-semibold text-blue-900 mb-2">
+                Tidak ada sesi
+              </p>
               <p className="text-sm">Tidak ada jadwal untuk hari ini</p>
             </div>
           )}
@@ -332,8 +341,10 @@ export default function TeacherSchedulePage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-center py-12">
-          <RefreshCw className="w-8 h-8 animate-spin text-green-600" />
-          <span className="ml-2 text-gray-600">Memuat jadwal...</span>
+          <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+          <span className="ml-2 text-blue-700 font-medium">
+            Memuat jadwal...
+          </span>
         </div>
       </div>
     );
@@ -342,8 +353,10 @@ export default function TeacherSchedulePage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="card p-6 text-center">
-          <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-500" />
+        <div className="card p-6 text-center border-2 border-red-200">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-500" />
+          </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
             Gagal Memuat Jadwal
           </h3>
@@ -362,8 +375,8 @@ export default function TeacherSchedulePage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Jadwal Mengajar</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-blue-900">Jadwal Mengajar</h1>
+          <p className="text-blue-600 mt-1 font-medium">
             {scheduleData?.teacherName || user?.name || "Guru"} • {currentDate}
           </p>
         </div>
@@ -380,20 +393,20 @@ export default function TeacherSchedulePage() {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setViewMode("week")}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg font-semibold transition-all ${
               viewMode === "week"
-                ? "bg-green-100 text-green-700"
-                : "text-gray-600 hover:bg-gray-100"
+                ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                : "text-blue-700 hover:bg-blue-100 border border-blue-200"
             }`}
           >
             Tampilan Minggu
           </button>
           <button
             onClick={() => setViewMode("day")}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-4 py-2 rounded-lg font-semibold transition-all ${
               viewMode === "day"
-                ? "bg-green-100 text-green-700"
-                : "text-gray-600 hover:bg-gray-100"
+                ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md"
+                : "text-blue-700 hover:bg-blue-100 border border-blue-200"
             }`}
           >
             Tampilan Hari
@@ -405,7 +418,7 @@ export default function TeacherSchedulePage() {
             <select
               value={selectedDay || ""}
               onChange={(e) => setSelectedDay(e.target.value)}
-              className="form-select"
+              className="input-field"
             >
               <option value="">Pilih Hari</option>
               {daysOfWeek.map((day) => (
@@ -420,65 +433,71 @@ export default function TeacherSchedulePage() {
 
       {/* Schedule Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card p-6">
+        <div className="card p-6 border-2 border-blue-200 hover:shadow-blue transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Sesi</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-semibold text-blue-600 mb-1">
+                Total Sesi
+              </p>
+              <p className="text-2xl font-bold text-blue-900">
                 {getAllScheduleItems().length}
               </p>
             </div>
-            <div className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-blue-600">
+            <div className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-6 border-2 border-blue-200 hover:shadow-blue transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Hari Aktif</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-semibold text-blue-600 mb-1">
+                Hari Aktif
+              </p>
+              <p className="text-2xl font-bold text-blue-900">
                 {Object.keys(scheduleData?.schedule || {}).length}
               </p>
             </div>
-            <div className="p-3 rounded-full bg-gradient-to-br from-green-500 to-green-600">
+            <div className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
               <Calendar className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-6 border-2 border-blue-200 hover:shadow-blue transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">
+              <p className="text-sm font-semibold text-blue-600 mb-1">
                 Mata Pelajaran
               </p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-2xl font-bold text-blue-900">
                 {
                   new Set(getAllScheduleItems().map((item) => item.subject.id))
                     .size
                 }
               </p>
             </div>
-            <div className="p-3 rounded-full bg-gradient-to-br from-purple-500 to-purple-600">
+            <div className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
               <BookOpen className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="card p-6">
+        <div className="card p-6 border-2 border-blue-200 hover:shadow-blue transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Kelas</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="text-sm font-semibold text-blue-600 mb-1">
+                Total Kelas
+              </p>
+              <p className="text-2xl font-bold text-blue-900">
                 {
                   new Set(getAllScheduleItems().map((item) => item.class.id))
                     .size
                 }
               </p>
             </div>
-            <div className="p-3 rounded-full bg-gradient-to-br from-orange-500 to-orange-600">
+            <div className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
               <Users className="w-6 h-6 text-white" />
             </div>
           </div>

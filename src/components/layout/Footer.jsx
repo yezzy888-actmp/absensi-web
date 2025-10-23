@@ -26,39 +26,42 @@ const Footer = ({ userRole = "admin" }) => {
   };
 
   return (
-    <footer className="border-t border-gray-200/30 bg-white/50 backdrop-blur-sm mt-auto">
+    <footer className="border-t border-gray-200/30 glass-effect mt-auto">
       <div className="px-6 py-4">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
           {/* Left Section - Copyright */}
-          <div className="flex items-center space-x-1 text-sm text-gray-600">
+          <div className="flex items-center space-x-1 text-sm text-gray-700">
             <span>© {currentYear} SMAN 1 PABEDILAN.</span>
           </div>
 
-          {/* Right Section - Links */}
+          {/* Right Section - Version */}
           <div className="flex items-center space-x-6 text-sm">
-            <div className="flex items-center space-x-1 text-gray-500">
-              <span>v1.1.0</span>
+            <div className="flex items-center space-x-1 text-gray-600">
+              <span className="font-medium">v1.1.0</span>
             </div>
           </div>
         </div>
 
         {/* User Session Info */}
         <div className="mt-3 pt-3 border-t border-gray-200/30">
-          <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 text-xs text-gray-500">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0 text-xs text-gray-600">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <User className="w-3 h-3" />
+                <User className="w-3 h-3 text-blue-500" />
+                <span className="text-gray-700">{getUserEmail()}</span>
               </div>
-              <span className="hidden sm:inline">•</span>
-              <span className="text-gray-600">{getUserEmail()}</span>
             </div>
             <div className="flex items-center space-x-4">
-              <span>
-                User ID: <span className="font-medium">{getUserId()}</span>
+              <span className="text-gray-600">
+                User ID:{" "}
+                <span className="font-medium text-blue-600">{getUserId()}</span>
               </span>
-              <span>
+              <span className="hidden sm:inline text-gray-400">•</span>
+              <span className="text-gray-600">
                 Last Login:{" "}
-                <span className="font-medium">{getLastLogin()}</span>
+                <span className="font-medium text-gray-700">
+                  {getLastLogin()}
+                </span>
               </span>
             </div>
           </div>

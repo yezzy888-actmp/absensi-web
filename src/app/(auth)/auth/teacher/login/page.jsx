@@ -23,7 +23,6 @@ export default function TeacherLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  // It's good practice to also have a serverError state here for consistency with the admin page
   const [serverError, setServerError] = useState("");
 
   const { login, loading, isAuthenticated, user } = useAuth();
@@ -70,20 +69,11 @@ export default function TeacherLoginPage() {
     setIsSubmitting(true);
 
     try {
-      // console.log("Attempting teacher login with:", { // Optional: for debugging
-      //   email: formData.email,
-      //   passwordLength: formData.password.length,
-      // });
-
       const result = await login(formData, "TEACHER");
 
-      // console.log("Login result:", result); // Optional: for debugging
-
       if (result.success) {
-        // console.log("Login successful, redirecting to:", result.redirectTo); // Optional: for debugging
         router.push(result.redirectTo || "/teacher");
       } else {
-        // Handle login failure
         setServerError(
           result.error || "Login gagal. Periksa email dan password Anda."
         );
@@ -91,7 +81,6 @@ export default function TeacherLoginPage() {
     } catch (error) {
       console.error("Login error:", error);
 
-      // Handle different types of errors (similar to admin login for consistency)
       if (error.response) {
         const message = error.response.data?.message || "Login gagal";
         setServerError(message);
@@ -133,24 +122,26 @@ export default function TeacherLoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-emerald-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="gradient-bg-reverse min-h-screen flex items-center justify-center p-4 page-transition">
+      <div className="w-full max-w-md animate-fade-in-up">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mb-4 shadow-blue pulse-ring">
             <GraduationCap className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Login Guru</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-gradient-reverse mb-2">
+            Login Guru
+          </h1>
+          <p className="text-muted-foreground">
             Akses portal guru untuk mengelola pembelajaran
           </p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8">
+        <div className="card p-8">
           {/* Server Error Display */}
           {serverError && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 rounded-lg animate-fade-in">
               <div className="flex items-center text-sm text-red-600">
                 <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span>{serverError}</span>
@@ -163,13 +154,13 @@ export default function TeacherLoginPage() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-semibold text-foreground mb-2"
               >
                 Email Guru
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                  <Mail className="h-5 w-5 text-blue-500" />
                 </div>
                 <input
                   id="email"
@@ -177,10 +168,10 @@ export default function TeacherLoginPage() {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors ${
+                  className={`input-field pl-10 relative ${
                     errors.email
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 bg-white"
+                      ? "border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500"
+                      : ""
                   }`}
                   placeholder="guru@sekolah.com"
                   disabled={loading || isSubmitting}
@@ -188,7 +179,7 @@ export default function TeacherLoginPage() {
                 />
               </div>
               {errors.email && (
-                <div className="mt-2 flex items-center text-sm text-red-600">
+                <div className="mt-2 flex items-center text-sm text-red-600 animate-fade-in">
                   <AlertCircle className="w-4 h-4 mr-1 flex-shrink-0" />
                   {errors.email}
                 </div>
@@ -199,13 +190,13 @@ export default function TeacherLoginPage() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 mb-2"
+                className="block text-sm font-semibold text-foreground mb-2"
               >
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                  <Lock className="h-5 w-5 text-blue-500" />
                 </div>
                 <input
                   id="password"
@@ -213,10 +204,10 @@ export default function TeacherLoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors ${
+                  className={`input-field pl-10 pr-12 relative ${
                     errors.password
-                      ? "border-red-300 bg-red-50"
-                      : "border-gray-300 bg-white"
+                      ? "border-red-400 bg-red-50 focus:border-red-500 focus:ring-red-500"
+                      : ""
                   }`}
                   placeholder="Masukkan password"
                   disabled={loading || isSubmitting}
@@ -225,98 +216,65 @@ export default function TeacherLoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-gray-50 rounded-r-lg transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center hover:bg-blue-50 rounded-r-lg transition-colors z-10"
                   disabled={loading || isSubmitting}
                   tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeOff className="h-5 w-5 text-blue-500 hover:text-blue-600 transition-colors" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <Eye className="h-5 w-5 text-blue-500 hover:text-blue-600 transition-colors" />
                   )}
                 </button>
               </div>
               {errors.password && (
-                <div className="mt-2 flex items-center text-sm text-red-600">
+                <div className="mt-2 flex items-center text-sm text-red-600 animate-fade-in">
                   <AlertCircle className="w-4 h-4 mr-1 flex-shrink-0" />
                   {errors.password}
                 </div>
               )}
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  // Note: This checkbox state is not currently managed.
-                  // You might want to add state for this if "Remember Me" functionality is needed.
-                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                />
-                <span className="ml-2 text-sm text-gray-600">Ingat saya</span>
-              </label>
-              <Link
-                href="/auth/forgot-password" // Assuming this path is correct
-                className="text-sm text-green-600 hover:text-green-700 font-medium transition-colors hover:underline"
-              >
-                Lupa password?
-              </Link>
-            </div>
-
             {/* Submit Button */}
             <button
               type="submit"
               disabled={loading || isSubmitting}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+              className="btn-primary w-full py-3 flex items-center justify-center"
             >
               {loading || isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Sedang masuk...
+                  <span>Sedang masuk...</span>
                 </>
               ) : (
                 <>
                   <BookOpen className="w-5 h-5 mr-2" />
-                  Masuk sebagai Guru
+                  <span>Masuk sebagai Guru</span>
                 </>
               )}
             </button>
           </form>
 
-          {/* Quick Access Info */}
-          <div className="mt-6 p-4 bg-green-50 rounded-lg border border-green-200">
-            <h3 className="text-sm font-medium text-green-800 mb-2">
-              Akses Cepat Portal Guru:
-            </h3>
-            <ul className="text-xs text-green-700 space-y-1">
-              <li>• Kelola jadwal dan mata pelajaran</li>
-              <li>• Input dan pantau kehadiran siswa</li>
-              <li>• Catat nilai dan evaluasi</li>
-              <li>• Lihat laporan pembelajaran</li>
-            </ul>
-          </div>
-
           {/* Divider */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="text-center text-sm text-gray-500">
+          <div className="mt-8 pt-6 border-t-2 border-border">
+            <div className="text-center text-sm text-muted-foreground font-medium">
               Login sebagai peran lain?
             </div>
-            <div className="mt-3 flex justify-center space-x-4">
+            <div className="mt-4 flex justify-center">
               <Link
                 href="/auth/admin/login"
-                className="text-green-600 hover:text-green-700 text-sm font-medium transition-colors hover:underline"
+                className="btn-secondary text-sm px-6 py-2 inline-flex items-center justify-center"
               >
                 Login Admin
               </Link>
-              {/* Student login link removed from here */}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>© 2024 Sistem Manajemen Sekolah</p>
-          <p className="mt-1">Butuh bantuan? Hubungi administrator sekolah</p>
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          <p className="font-medium">© 2024 Sistem Manajemen Sekolah</p>
+          <p className="mt-2">Butuh bantuan? Hubungi administrator sekolah</p>
         </div>
       </div>
     </div>

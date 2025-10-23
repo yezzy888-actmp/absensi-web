@@ -10,7 +10,6 @@ import {
   Calendar,
   HelpCircle,
   ChevronDown,
-  CalendarCheck,
   ChevronRight,
   UserCheck,
   ClipboardList,
@@ -166,8 +165,8 @@ const Sidebar = ({ userRole = "admin", isOpen, onClose }) => {
             onClick={() => toggleMenu(item.label)}
             className={`flex items-center justify-between w-full px-4 py-3 text-left rounded-lg transition-all duration-200 ${
               isActive || isExpanded
-                ? "bg-blue-50/80 text-blue-700 shadow-sm"
-                : "text-gray-700 hover:bg-white/50"
+                ? "bg-blue-50 text-blue-700 shadow-sm"
+                : "text-gray-700 hover:bg-blue-50/50"
             }`}
             style={{ paddingLeft: `${1 + depth * 0.75}rem` }}
           >
@@ -200,15 +199,15 @@ const Sidebar = ({ userRole = "admin", isOpen, onClose }) => {
           onClick={onClose}
           className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
             isActive
-              ? "bg-blue-50/80 text-blue-700 shadow-sm border-l-4 border-blue-500"
-              : "text-gray-700 hover:bg-white/50"
+              ? "bg-blue-50 text-blue-700 shadow-sm border-l-4 border-blue-500"
+              : "text-gray-700 hover:bg-blue-50/50"
           }`}
           style={{ paddingLeft: `${1 + depth * 0.75}rem` }}
         >
           {depth === 0 && <item.icon className="w-5 h-5" />}
           {depth > 0 && (
             <div className="w-5 h-5 flex items-center justify-center">
-              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
             </div>
           )}
           <span className="font-medium">{item.label}</span>
@@ -247,7 +246,7 @@ const Sidebar = ({ userRole = "admin", isOpen, onClose }) => {
                 <h2 className="text-lg font-bold text-gradient">
                   SMAN 1 PABEDILAN
                 </h2>
-                <p className="text-xs text-gray-500 capitalize">
+                <p className="text-xs text-gray-600 capitalize">
                   {user?.role?.toLowerCase() || userRole} Panel
                 </p>
               </div>
@@ -267,7 +266,7 @@ const Sidebar = ({ userRole = "admin", isOpen, onClose }) => {
           <div className="p-4 border-t border-gray-200/30">
             <div className="card p-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue">
                   <span className="text-sm font-bold text-white">
                     {getUserInitials()}
                   </span>

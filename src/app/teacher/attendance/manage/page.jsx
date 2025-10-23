@@ -1,10 +1,10 @@
-// src/app/teacher/attendance/page.jsx (Updated file path based on typical Next.js structure)
+// src/app/teacher/attendance/page.jsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useTeacherAttendance } from "@/hooks/useApi"; // Ensure this path is correct
-import { classAPI } from "@/lib/api"; // teacherAPI is used internally by useTeacherAttendance now
+import { useTeacherAttendance } from "@/hooks/useApi";
+import { classAPI } from "@/lib/api";
 import toast from "react-hot-toast";
 import {
   Calendar,
@@ -17,22 +17,20 @@ import {
   AlertTriangle,
   RefreshCw,
   Edit3,
-  ClipboardCheck, // For Present
-  ClipboardX, // For Alpha
-  Bed, // For Sick
-  FileText, // For Permission
+  ClipboardCheck,
+  ClipboardX,
+  Bed,
+  FileText,
 } from "lucide-react";
 
-// Status absensi yang akan digunakan
 const AttendanceStatus = {
   HADIR: "HADIR",
   IZIN: "IZIN",
   SAKIT: "SAKIT",
   ALPHA: "ALPHA",
-  NOT_MARKED: "NOT_MARKED", // Add this to represent un-marked students
+  NOT_MARKED: "NOT_MARKED",
 };
 
-// Helper to format time (HH:MM)
 const formatTime = (dateString) => {
   if (!dateString) return "N/A";
   return new Date(dateString).toLocaleTimeString("id-ID", {
@@ -43,7 +41,7 @@ const formatTime = (dateString) => {
 };
 
 const getStatusColorAndText = (status) => {
-  let colorClass = "bg-gray-100 text-gray-800";
+  let colorClass = "bg-gray-100 text-gray-800 border border-gray-200";
   let text = "Belum Diabsen";
 
   if (!status || status === AttendanceStatus.NOT_MARKED) {
@@ -52,19 +50,19 @@ const getStatusColorAndText = (status) => {
 
   switch (status.toUpperCase()) {
     case AttendanceStatus.HADIR:
-      colorClass = "bg-green-100 text-green-800";
+      colorClass = "bg-green-100 text-green-800 border border-green-200";
       text = "Hadir";
       break;
     case AttendanceStatus.ALPHA:
-      colorClass = "bg-red-100 text-red-800";
+      colorClass = "bg-red-100 text-red-800 border border-red-200";
       text = "Alpha";
       break;
     case AttendanceStatus.SAKIT:
-      colorClass = "bg-purple-100 text-purple-800";
+      colorClass = "bg-purple-100 text-purple-800 border border-purple-200";
       text = "Sakit";
       break;
     case AttendanceStatus.IZIN:
-      colorClass = "bg-blue-100 text-blue-800";
+      colorClass = "bg-blue-100 text-blue-800 border border-blue-200";
       text = "Izin";
       break;
     default:
@@ -86,8 +84,8 @@ export default function ManageAttendancePage() {
     loading: loadingHook,
     error: errorHook,
     getAttendanceSessions,
-    createStudentAttendance, // For creating new records
-    markStudentPresent, // For updating existing records
+    createStudentAttendance,
+    markStudentPresent,
     markStudentAlpha,
     markStudentSick,
     markStudentPermission,
@@ -106,11 +104,10 @@ export default function ManageAttendancePage() {
   const [manualReason, setManualReason] = useState("");
   const [submitManualLoading, setSubmitManualLoading] = useState(false);
 
-  // Function to fetch sessions for the selected date
   const fetchSessionsForDateCallback = useCallback(async () => {
     if (!teacherId || !selectedDate) return;
     setLoadingSessions(true);
-    setSelectedSession(null); // Clear selected session when fetching new date's sessions
+    setSelectedSession(null);
     try {
       const params = { date: selectedDate, limit: 100 };
       const todayISO = new Date().toISOString().split("T")[0];
@@ -132,23 +129,20 @@ export default function ManageAttendancePage() {
     }
   }, [teacherId, selectedDate, getAttendanceSessions, showOnlyActiveSessions]);
 
-  // Effect to refetch sessions when date or active session toggle changes
   useEffect(() => {
     fetchSessionsForDateCallback();
   }, [fetchSessionsForDateCallback]);
 
-  // Handle selecting a session to view its attendance details
   const handleSessionSelect = useCallback(
     async (sessionStub) => {
       if (!teacherId || !sessionStub?.id) return;
       setLoadingSessionDetails(true);
-      setSelectedSession(null); // Clear previous selection before loading new details
+      setSelectedSession(null);
       try {
-        // Fetch detailed session information, including attendances
         const sessionDetailsResponse = await getAttendanceSessions({
           sessionId: sessionStub.id,
           includeAttendances: true,
-          limit: 1, // We only need details for this specific session
+          limit: 1,
         });
 
         const detailedSession =
@@ -161,7 +155,6 @@ export default function ManageAttendancePage() {
           toast.error(
             "Detail sesi tidak lengkap atau ID kelas tidak ditemukan."
           );
-          // Fallback to displaying just the stub if details couldn't be loaded
           const currentFetched = fetchedSessions.find(
             (s) => s.id === sessionStub.id
           );
@@ -170,10 +163,9 @@ export default function ManageAttendancePage() {
           return;
         }
 
-        // Fetch class roster (students)
         const classStudentsResponse = await classAPI.getClassStudents(
           detailedSession.schedule.class.id,
-          { limit: 500 } // Fetch a generous limit for class students
+          { limit: 500 }
         );
         const classRoster =
           classStudentsResponse.data?.students ||
@@ -186,7 +178,6 @@ export default function ManageAttendancePage() {
           });
         }
 
-        // Map existing attendances for quick lookup
         const existingAttendancesMap = new Map(
           (detailedSession.attendances || []).map((att) => [
             att.student?.id,
@@ -194,15 +185,13 @@ export default function ManageAttendancePage() {
           ])
         );
 
-        // Combine class roster with existing attendance data
         const finalAttendances = classRoster.map((studentFromRoster) => {
           const existingAtt = existingAttendancesMap.get(studentFromRoster.id);
           if (existingAtt) {
             return existingAtt;
           } else {
-            // If no existing attendance, create a placeholder
             return {
-              id: null, // Indicates no existing attendance record
+              id: null,
               student: studentFromRoster,
               status: AttendanceStatus.NOT_MARKED,
               notes: "",
@@ -213,7 +202,6 @@ export default function ManageAttendancePage() {
           }
         });
 
-        // Sort students by name
         finalAttendances.sort((a, b) =>
           (a.student?.name || a.student?.fullName || "").localeCompare(
             b.student?.name || b.student?.fullName || ""
@@ -227,7 +215,6 @@ export default function ManageAttendancePage() {
       } catch (error) {
         console.error("Error fetching session details and roster:", error);
         toast.error("Gagal memuat detail sesi dan daftar siswa.");
-        // Revert to session stub if detailed fetch fails
         const currentFetched = fetchedSessions.find(
           (s) => s.id === sessionStub.id
         );
@@ -239,7 +226,6 @@ export default function ManageAttendancePage() {
     [teacherId, getAttendanceSessions, selectedDate, fetchedSessions]
   );
 
-  // Centralized function to handle marking or updating student attendance
   const handleUpdateOrMarkAttendance = useCallback(
     async (attendanceRecord, newStatus, notes = "") => {
       const studentId = attendanceRecord.student.id;
@@ -254,7 +240,6 @@ export default function ManageAttendancePage() {
 
       const originalAttendances = selectedSession.attendances;
 
-      // Optimistic UI update
       setSelectedSession((prev) => {
         if (!prev) return null;
         return {
@@ -265,8 +250,6 @@ export default function ManageAttendancePage() {
                   ...att,
                   status: newStatus,
                   notes: notes,
-                  // If it's a new record being created, we assign a temporary ID.
-                  // The actual ID from the backend will replace it later.
                   id: att.id || `temp-${studentId}-${Date.now()}`,
                 }
               : att
@@ -280,7 +263,6 @@ export default function ManageAttendancePage() {
           currentAttendanceId &&
           currentAttendanceId.startsWith("temp-") === false
         ) {
-          // If attendance record already exists (has a real ID), use update functions
           switch (newStatus) {
             case AttendanceStatus.HADIR:
               response = await markStudentPresent(currentAttendanceId);
@@ -295,8 +277,6 @@ export default function ManageAttendancePage() {
               response = await markStudentPermission(currentAttendanceId);
               break;
             default:
-              // Fallback to create if status is unknown or not explicitly handled for update
-              // This case should ideally not be hit if statuses are strictly HADIR, ALPHA, SAKIT, IZIN
               response = await createStudentAttendance(
                 selectedSession.id,
                 studentId,
@@ -306,7 +286,6 @@ export default function ManageAttendancePage() {
               break;
           }
         } else {
-          // If no attendance record exists (id is null or temporary), create a new one
           response = await createStudentAttendance(
             selectedSession.id,
             studentId,
@@ -325,7 +304,6 @@ export default function ManageAttendancePage() {
           } berhasil diubah menjadi ${displayStatusText.toLowerCase()}.`
         );
 
-        // Update UI with the actual response from the backend (especially important for new IDs)
         setSelectedSession((prev) => {
           if (!prev) return null;
           return {
@@ -334,8 +312,8 @@ export default function ManageAttendancePage() {
               att.student.id === studentId
                 ? {
                     ...att,
-                    ...(response.attendance || response), // Use response data to update
-                    id: response.attendance?.id || response?.id || att.id, // Ensure actual ID is set
+                    ...(response.attendance || response),
+                    id: response.attendance?.id || response?.id || att.id,
                     status:
                       response.attendance?.status ||
                       response?.status ||
@@ -352,7 +330,6 @@ export default function ManageAttendancePage() {
             error.message ||
             "Gagal memperbarui status absensi."
         );
-        // Revert optimistic update on error
         setSelectedSession((prev) => ({
           ...prev,
           attendances: originalAttendances,
@@ -369,7 +346,6 @@ export default function ManageAttendancePage() {
     ]
   );
 
-  // Handler for direct status buttons (Hadir, Alpha)
   const handleQuickMark = useCallback(
     (attendanceRecord, status) => {
       handleUpdateOrMarkAttendance(attendanceRecord, status);
@@ -377,7 +353,6 @@ export default function ManageAttendancePage() {
     [handleUpdateOrMarkAttendance]
   );
 
-  // Handler for manual status submission (from the modal/inline edit)
   const handleManualStatusSubmit = async (studentId, studentName) => {
     if (!selectedSession?.id || !studentId) {
       toast.error("Sesi atau siswa tidak valid.");
@@ -387,7 +362,6 @@ export default function ManageAttendancePage() {
     setSubmitManualLoading(true);
 
     try {
-      // Find the attendance record to pass to the generic handler
       const attendanceRecord = selectedSession.attendances.find(
         (att) => att.student.id === studentId
       );
@@ -402,12 +376,11 @@ export default function ManageAttendancePage() {
         manualReason
       );
 
-      // Reset form
       setStudentBeingEdited(null);
       setManualStatus(AttendanceStatus.HADIR);
       setManualReason("");
     } catch (error) {
-      // Error handling is already done in handleUpdateOrMarkAttendance
+      // Error already handled
     } finally {
       setSubmitManualLoading(false);
     }
@@ -416,7 +389,8 @@ export default function ManageAttendancePage() {
   if (!user || !teacherId) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <p>Memuat data pengguna...</p>
+        <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mr-2" />
+        <p className="text-gray-600">Memuat data pengguna...</p>
       </div>
     );
   }
@@ -424,8 +398,8 @@ export default function ManageAttendancePage() {
   if (loadingHook && !fetchedSessions.length && !selectedSession) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <RefreshCw className="w-8 h-8 animate-spin text-green-600" />
-        <span className="ml-2">Memuat data awal...</span>
+        <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mr-2" />
+        <span className="text-gray-600">Memuat data awal...</span>
       </div>
     );
   }
@@ -454,14 +428,14 @@ export default function ManageAttendancePage() {
         </h1>
       </div>
 
-      {/* Date Picker and Refresh */}
-      <div className="card p-4">
+      {/* Date Picker and Refresh - Updated dengan warna blue */}
+      <div className="card p-4 border-2 border-blue-100">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-end gap-2">
             <div>
               <label
                 htmlFor="attendance-date"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-blue-900 mb-1"
               >
                 Pilih Tanggal:
               </label>
@@ -471,15 +445,15 @@ export default function ManageAttendancePage() {
                 value={selectedDate}
                 onChange={(e) => {
                   setSelectedDate(e.target.value);
-                  setSelectedSession(null); // Clear selected session when date changes
+                  setSelectedSession(null);
                 }}
-                className="form-input rounded-md shadow-sm"
+                className="input-field"
               />
             </div>
             <div className="pt-5">
               <label
                 htmlFor="show-active-toggle"
-                className="flex items-center text-sm text-gray-700 cursor-pointer"
+                className="flex items-center text-sm text-gray-700 cursor-pointer hover:text-blue-700 transition-colors"
               >
                 <input
                   type="checkbox"
@@ -487,9 +461,9 @@ export default function ManageAttendancePage() {
                   checked={showOnlyActiveSessions}
                   onChange={(e) => {
                     setShowOnlyActiveSessions(e.target.checked);
-                    setSelectedSession(null); // Clear selected session when toggle changes
+                    setSelectedSession(null);
                   }}
-                  className="form-checkbox h-4 w-4 text-green-600 rounded mr-2"
+                  className="form-checkbox h-4 w-4 text-blue-600 rounded mr-2"
                 />
                 Hanya Sesi Aktif (Hari Ini)
               </label>
@@ -509,17 +483,19 @@ export default function ManageAttendancePage() {
         </div>
       </div>
 
-      {/* Sessions List */}
+      {/* Sessions List - Updated dengan warna blue */}
       {loadingSessions ? (
         <div className="text-center py-8">
-          <RefreshCw className="w-6 h-6 mx-auto animate-spin text-green-500" />
+          <RefreshCw className="w-6 h-6 mx-auto animate-spin text-blue-600" />
           <p className="mt-2 text-gray-600">Memuat sesi absensi...</p>
         </div>
       ) : fetchedSessions.length === 0 ? (
-        <div className="card p-6 text-center text-gray-500">
-          <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-          <p className="text-lg">Tidak ada sesi absensi</p>
-          <p className="text-sm">
+        <div className="card p-6 text-center text-gray-500 border-2 border-blue-100">
+          <Calendar className="w-12 h-12 mx-auto mb-3 text-blue-300" />
+          <p className="text-lg font-semibold text-gray-700">
+            Tidak ada sesi absensi
+          </p>
+          <p className="text-sm mt-2">
             {showOnlyActiveSessions &&
             selectedDate === new Date().toISOString().split("T")[0]
               ? `Tidak ditemukan sesi aktif untuk tanggal ${selectedDate}. Coba nonaktifkan filter "Hanya Sesi Aktif".`
@@ -533,13 +509,13 @@ export default function ManageAttendancePage() {
               key={session.id}
               className={`card p-4 rounded-lg border-l-4 cursor-pointer transition-all hover:shadow-lg ${
                 selectedSession?.id === session.id
-                  ? "border-green-500 bg-green-50 scale-105 shadow-green-200"
-                  : "border-gray-300 hover:border-green-400"
+                  ? "border-blue-500 bg-blue-50 scale-105 shadow-blue"
+                  : "border-blue-200 hover:border-blue-400"
               }`}
               onClick={() => handleSessionSelect(session)}
             >
               <div className="flex items-center space-x-3 mb-1">
-                <BookOpen className="w-5 h-5 text-green-600 flex-shrink-0" />
+                <BookOpen className="w-5 h-5 text-blue-600 flex-shrink-0" />
                 <h3
                   className="font-semibold text-gray-800 truncate"
                   title={session.schedule?.subject?.name || "Tanpa Nama Subjek"}
@@ -565,30 +541,30 @@ export default function ManageAttendancePage() {
               </div>
               {session.expiresAt &&
                 new Date(session.expiresAt) > new Date() && (
-                  <p className="text-xs text-green-600 font-semibold mt-1">
+                  <p className="text-xs text-blue-600 font-semibold mt-1">
                     Aktif hingga: {formatTime(session.expiresAt)}
                   </p>
                 )}
               {loadingSessionDetails && selectedSession?.id === session.id && (
-                <RefreshCw className="w-4 h-4 animate-spin text-green-500 mt-2" />
+                <RefreshCw className="w-4 h-4 animate-spin text-blue-500 mt-2" />
               )}
             </div>
           ))}
         </div>
       )}
 
-      {/* Selected Session Details - Student List */}
+      {/* Selected Session Details - Updated dengan warna blue */}
       {loadingSessionDetails && !selectedSession ? (
-        <div className="card p-6 mt-6 text-center">
-          <RefreshCw className="w-8 h-8 mx-auto animate-spin text-green-500" />
+        <div className="card p-6 mt-6 text-center border-2 border-blue-100">
+          <RefreshCw className="w-8 h-8 mx-auto animate-spin text-blue-600" />
           <p className="mt-2 text-gray-600">
             Memuat detail sesi dan daftar siswa...
           </p>
         </div>
       ) : (
         selectedSession && (
-          <div className="card p-6 mt-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-1">
+          <div className="card p-6 mt-6 border-2 border-blue-100">
+            <h2 className="text-xl font-bold text-blue-900 mb-1">
               Detail Sesi: {selectedSession.schedule?.subject?.name || "N/A"} -
               Kelas {selectedSession.schedule?.class?.name || "N/A"}
             </h2>
@@ -608,29 +584,34 @@ export default function ManageAttendancePage() {
             {selectedSession.attendances &&
             selectedSession.attendances.length > 0 ? (
               <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
+                <table className="min-w-full divide-y divide-blue-100">
+                  <thead className="bg-blue-50">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
                         Siswa
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
                         Aksi
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {selectedSession.attendances.map((att) => {
+                  <tbody className="bg-white divide-y divide-blue-50">
+                    {selectedSession.attendances.map((att, index) => {
                       const { colorClass, text: statusText } =
                         getStatusColorAndText(att.status);
                       const isBeingEdited =
                         studentBeingEdited === att.student.id;
 
                       return (
-                        <tr key={att.student.id} className="hover:bg-gray-50">
+                        <tr
+                          key={att.student.id}
+                          className={`hover:bg-blue-50 transition-colors ${
+                            index % 2 === 0 ? "bg-white" : "bg-blue-25"
+                          }`}
+                        >
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
                             {att.student?.name ||
                               att.student?.fullName ||
@@ -641,7 +622,7 @@ export default function ManageAttendancePage() {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm">
                             <span
-                              className={`px-2.5 py-0.5 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}`}
+                              className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}`}
                             >
                               {statusText}
                             </span>
@@ -660,12 +641,12 @@ export default function ManageAttendancePage() {
                                     onChange={(e) =>
                                       setManualStatus(e.target.value)
                                     }
-                                    className="form-select text-xs py-1 px-2 rounded border-gray-300"
+                                    className="form-select text-xs py-1 px-2 rounded border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                                   >
                                     {Object.values(AttendanceStatus)
                                       .filter(
                                         (s) => s !== AttendanceStatus.NOT_MARKED
-                                      ) // Don't show NOT_MARKED as an option to set
+                                      )
                                       .map((statusOption) => (
                                         <option
                                           key={statusOption}
@@ -714,7 +695,7 @@ export default function ManageAttendancePage() {
                                   onClick={() =>
                                     handleQuickMark(att, AttendanceStatus.HADIR)
                                   }
-                                  className="p-1 rounded-full hover:bg-green-100 text-green-500 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                  className="p-1 rounded-full hover:bg-green-100 text-green-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
                                   disabled={
                                     att.status === AttendanceStatus.HADIR
                                   }
@@ -726,7 +707,7 @@ export default function ManageAttendancePage() {
                                   onClick={() =>
                                     handleQuickMark(att, AttendanceStatus.ALPHA)
                                   }
-                                  className="p-1 rounded-full hover:bg-red-100 text-red-500 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                  className="p-1 rounded-full hover:bg-red-100 text-red-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
                                   disabled={
                                     att.status === AttendanceStatus.ALPHA
                                   }
@@ -738,7 +719,7 @@ export default function ManageAttendancePage() {
                                   onClick={() =>
                                     handleQuickMark(att, AttendanceStatus.SAKIT)
                                   }
-                                  className="p-1 rounded-full hover:bg-purple-100 text-purple-500 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                  className="p-1 rounded-full hover:bg-purple-100 text-purple-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
                                   disabled={
                                     att.status === AttendanceStatus.SAKIT
                                   }
@@ -750,7 +731,7 @@ export default function ManageAttendancePage() {
                                   onClick={() =>
                                     handleQuickMark(att, AttendanceStatus.IZIN)
                                   }
-                                  className="p-1 rounded-full hover:bg-blue-100 text-blue-500 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                                  className="p-1 rounded-full hover:bg-blue-100 text-blue-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed transition-colors"
                                   disabled={
                                     att.status === AttendanceStatus.IZIN
                                   }
@@ -761,7 +742,6 @@ export default function ManageAttendancePage() {
                                 <button
                                   onClick={() => {
                                     setStudentBeingEdited(att.student.id);
-                                    // Pre-fill manual status with current status if available, otherwise default to HADIR
                                     setManualStatus(
                                       att.status !== AttendanceStatus.NOT_MARKED
                                         ? att.status
@@ -769,7 +749,7 @@ export default function ManageAttendancePage() {
                                     );
                                     setManualReason(att.notes || "");
                                   }}
-                                  className="p-1 rounded-full hover:bg-blue-100 text-blue-500"
+                                  className="p-1 rounded-full hover:bg-blue-100 text-blue-600 transition-colors"
                                   title="Edit Status & Catatan"
                                 >
                                   <Edit3 size={20} />

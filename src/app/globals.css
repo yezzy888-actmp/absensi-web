@@ -14,45 +14,45 @@ body {
 @layer base {
     :root {
         --background: 0 0% 100%;
-        --foreground: 222.2 84% 4.9%;
+        --foreground: 210 40% 15%;
         --card: 0 0% 100%;
-        --card-foreground: 222.2 84% 4.9%;
+        --card-foreground: 210 40% 15%;
         --popover: 0 0% 100%;
-        --popover-foreground: 222.2 84% 4.9%;
-        --primary: 217 91% 60%;
-        --primary-foreground: 210 40% 98%;
+        --popover-foreground: 210 40% 15%;
+        --primary: 210 100% 45%;
+        --primary-foreground: 0 0% 100%;
         --secondary: 210 40% 96%;
-        --secondary-foreground: 222.2 84% 4.9%;
+        --secondary-foreground: 210 40% 15%;
         --muted: 210 40% 96%;
-        --muted-foreground: 215.4 16.3% 46.9%;
-        --accent: 217 100% 97%;
-        --accent-foreground: 217 91% 60%;
+        --muted-foreground: 210 20% 50%;
+        --accent: 210 100% 95%;
+        --accent-foreground: 210 100% 45%;
         --destructive: 0 84.2% 60.2%;
-        --destructive-foreground: 210 40% 98%;
-        --border: 214.3 31.8% 91.4%;
-        --input: 214.3 31.8% 91.4%;
-        --ring: 217 91% 60%;
+        --destructive-foreground: 0 0% 100%;
+        --border: 210 40% 88%;
+        --input: 210 40% 88%;
+        --ring: 210 100% 45%;
         --radius: 0.75rem;
-        --blue-50: 239 100% 97%;
-        --blue-100: 219 100% 95%;
-        --blue-200: 213 97% 87%;
-        --blue-300: 212 96% 78%;
-        --blue-400: 213 94% 68%;
-        --blue-500: 217 91% 60%;
-        --blue-600: 221 83% 53%;
-        --blue-700: 224 76% 48%;
-        --blue-800: 226 71% 40%;
-        --blue-900: 224 64% 33%;
-        --purple-50: 250 100% 98%;
-        --purple-100: 243 100% 96%;
-        --purple-200: 239 84% 92%;
-        --purple-300: 237 79% 85%;
-        --purple-400: 236 72% 75%;
-        --purple-500: 236 72% 64%;
-        --purple-600: 237 74% 54%;
-        --purple-700: 238 77% 46%;
-        --purple-800: 239 77% 38%;
-        --purple-900: 240 75% 31%;
+        --blue-50: 210 100% 98%;
+        --blue-100: 210 100% 95%;
+        --blue-200: 210 100% 88%;
+        --blue-300: 210 100% 75%;
+        --blue-400: 210 100% 60%;
+        --blue-500: 210 100% 45%;
+        --blue-600: 210 100% 38%;
+        --blue-700: 210 100% 32%;
+        --blue-800: 210 100% 25%;
+        --blue-900: 210 100% 18%;
+        --purple-50: 220 100% 98%;
+        --purple-100: 220 95% 95%;
+        --purple-200: 220 90% 88%;
+        --purple-300: 220 85% 75%;
+        --purple-400: 220 80% 60%;
+        --purple-500: 220 75% 50%;
+        --purple-600: 220 70% 42%;
+        --purple-700: 220 65% 35%;
+        --purple-800: 220 60% 28%;
+        --purple-900: 220 55% 20%;
     }
 }
 
@@ -212,7 +212,7 @@ body {
         font-weight: 700;
         line-height: 1.2;
         letter-spacing: -0.025em;
-        color: hsl(var(--blue-900));
+        color: hsl(var(--blue-800));
     }
 
     .card-description {
@@ -244,11 +244,10 @@ body {
     .gradient-bg {
         background: linear-gradient(135deg,
                 hsl(var(--blue-50)) 0%,
-                hsl(var(--blue-100)) 15%,
-                hsl(var(--purple-50)) 35%,
-                rgba(255, 255, 255, 0.9) 50%,
-                hsl(var(--purple-50)) 65%,
-                hsl(var(--blue-100)) 85%,
+                hsl(var(--blue-100)) 20%,
+                rgba(255, 255, 255, 0.95) 40%,
+                hsl(var(--blue-50)) 60%,
+                hsl(var(--blue-100)) 80%,
                 hsl(var(--blue-50)) 100%);
         position: relative;
         min-height: 100vh;
@@ -262,9 +261,9 @@ body {
         right: 0;
         bottom: 0;
         background-image:
-            radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 75% 75%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 50% 10%, rgba(236, 72, 153, 0.1) 0%, transparent 30%);
+            radial-gradient(circle at 25% 25%, rgba(33, 150, 243, 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 75% 75%, rgba(33, 150, 243, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 50% 10%, rgba(25, 118, 210, 0.1) 0%, transparent 30%);
         pointer-events: none;
     }
 
@@ -272,11 +271,10 @@ body {
     .gradient-bg-reverse {
         background: linear-gradient(315deg,
                 hsl(var(--blue-50)) 0%,
-                hsl(var(--blue-100)) 15%,
-                hsl(var(--purple-50)) 35%,
-                rgba(255, 255, 255, 0.9) 50%,
-                hsl(var(--purple-50)) 65%,
-                hsl(var(--blue-100)) 85%,
+                hsl(var(--blue-100)) 20%,
+                rgba(255, 255, 255, 0.95) 40%,
+                hsl(var(--blue-50)) 60%,
+                hsl(var(--blue-100)) 80%,
                 hsl(var(--blue-50)) 100%);
         position: relative;
         min-height: 100vh;
@@ -290,21 +288,20 @@ body {
         right: 0;
         bottom: 0;
         background-image:
-            radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
-            radial-gradient(circle at 50% 90%, rgba(236, 72, 153, 0.1) 0%, transparent 30%);
+            radial-gradient(circle at 75% 75%, rgba(33, 150, 243, 0.12) 0%, transparent 50%),
+            radial-gradient(circle at 25% 25%, rgba(33, 150, 243, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 50% 90%, rgba(25, 118, 210, 0.1) 0%, transparent 30%);
         pointer-events: none;
     }
 
     /* Gradient alternatif untuk variasi halaman */
     .gradient-bg-alt {
         background: linear-gradient(225deg,
-                hsl(var(--purple-50)) 0%,
-                hsl(var(--blue-50)) 20%,
-                rgba(255, 255, 255, 0.95) 40%,
-                hsl(var(--blue-100)) 60%,
-                hsl(var(--purple-100)) 80%,
-                hsl(var(--purple-50)) 100%);
+                hsl(var(--blue-50)) 0%,
+                rgba(255, 255, 255, 0.98) 25%,
+                hsl(var(--blue-100)) 50%,
+                rgba(255, 255, 255, 0.98) 75%,
+                hsl(var(--blue-50)) 100%);
         position: relative;
         min-height: 100vh;
     }
@@ -317,21 +314,20 @@ body {
         right: 0;
         bottom: 0;
         background-image:
-            radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
-            radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
-            radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+            radial-gradient(circle at 20% 80%, rgba(33, 150, 243, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(25, 118, 210, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(30, 136, 229, 0.08) 0%, transparent 40%);
         pointer-events: none;
     }
 
     /* Gradient reverse alternatif */
     .gradient-bg-alt-reverse {
         background: linear-gradient(45deg,
-                hsl(var(--purple-50)) 0%,
-                hsl(var(--blue-50)) 20%,
-                rgba(255, 255, 255, 0.95) 40%,
-                hsl(var(--blue-100)) 60%,
-                hsl(var(--purple-100)) 80%,
-                hsl(var(--purple-50)) 100%);
+                hsl(var(--blue-50)) 0%,
+                rgba(255, 255, 255, 0.98) 25%,
+                hsl(var(--blue-100)) 50%,
+                rgba(255, 255, 255, 0.98) 75%,
+                hsl(var(--blue-50)) 100%);
         position: relative;
         min-height: 100vh;
     }
@@ -344,17 +340,16 @@ body {
         right: 0;
         bottom: 0;
         background-image:
-            radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 50%),
-            radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.12) 0%, transparent 50%),
-            radial-gradient(circle at 40% 60%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+            radial-gradient(circle at 80% 20%, rgba(33, 150, 243, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 20% 80%, rgba(25, 118, 210, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 60%, rgba(30, 136, 229, 0.08) 0%, transparent 40%);
         pointer-events: none;
     }
 
     .hero-gradient {
         background: linear-gradient(135deg,
                 hsl(var(--blue-600)) 0%,
-                hsl(var(--blue-500)) 30%,
-                hsl(var(--purple-500)) 70%,
+                hsl(var(--blue-500)) 50%,
                 hsl(var(--blue-400)) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -441,9 +436,9 @@ body {
     .section-divider {
         background: linear-gradient(90deg,
                 transparent 0%,
-                hsl(var(--blue-300) / 0.5) 20%,
-                hsl(var(--purple-300) / 0.5) 50%,
-                hsl(var(--blue-300) / 0.5) 80%,
+                hsl(var(--blue-300) / 0.4) 20%,
+                hsl(var(--blue-400) / 0.5) 50%,
+                hsl(var(--blue-300) / 0.4) 80%,
                 transparent 100%);
         height: 1px;
         width: 100%;
@@ -463,12 +458,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, hsl(var(--blue-400)), hsl(var(--purple-500)));
+    background: linear-gradient(180deg, hsl(var(--blue-400)), hsl(var(--blue-600)));
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, hsl(var(--blue-500)), hsl(var(--purple-600)));
+    background: linear-gradient(180deg, hsl(var(--blue-500)), hsl(var(--blue-700)));
 }
 
 /* Enhanced animations */
@@ -582,14 +577,14 @@ body {
 
 /* Utility classes */
 .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--blue-600)), hsl(var(--purple-500)));
+    background: linear-gradient(135deg, hsl(var(--blue-600)), hsl(var(--blue-500)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
 }
 
 .text-gradient-reverse {
-    background: linear-gradient(315deg, hsl(var(--blue-600)), hsl(var(--purple-500)));
+    background: linear-gradient(315deg, hsl(var(--blue-600)), hsl(var(--blue-500)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -600,19 +595,19 @@ body {
 }
 
 .shadow-purple {
-    box-shadow: 0 10px 25px -3px hsl(var(--purple-500) / 0.3), 0 4px 6px -2px hsl(var(--purple-500) / 0.05);
+    box-shadow: 0 10px 25px -3px hsl(var(--blue-600) / 0.3), 0 4px 6px -2px hsl(var(--blue-600) / 0.05);
 }
 
 .border-gradient {
-    background: linear-gradient(135deg, hsl(var(--blue-200)), hsl(var(--purple-200))) padding-box,
-        linear-gradient(135deg, hsl(var(--blue-400)), hsl(var(--purple-500))) border-box;
+    background: linear-gradient(135deg, hsl(var(--blue-100)), hsl(var(--blue-50))) padding-box,
+        linear-gradient(135deg, hsl(var(--blue-400)), hsl(var(--blue-600))) border-box;
     border: 2px solid transparent;
     border-radius: var(--radius);
 }
 
 .border-gradient-reverse {
-    background: linear-gradient(315deg, hsl(var(--blue-200)), hsl(var(--purple-200))) padding-box,
-        linear-gradient(315deg, hsl(var(--blue-400)), hsl(var(--purple-500))) border-box;
+    background: linear-gradient(315deg, hsl(var(--blue-100)), hsl(var(--blue-50))) padding-box,
+        linear-gradient(315deg, hsl(var(--blue-400)), hsl(var(--blue-600))) border-box;
     border: 2px solid transparent;
     border-radius: var(--radius);
 }

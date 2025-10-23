@@ -1,4 +1,4 @@
-// src/components/guru/SchoolLocationPickerMap.jsx (KODE LENGKAP DENGAN PERBAIKAN LOOP)
+// src/components/guru/SchoolLocationPickerMap.jsx (DENGAN SKEMA WARNA HARMONIS)
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -18,21 +18,17 @@ L.Icon.Default.mergeOptions({
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// ========================================
-// PRESET LOKASI - HARUS DIUPDATE DENGAN KOORDINAT SMAN 1 PABEDILAN
-// ========================================
+// PRESET LOKASI
 const SCHOOL_LOCATION = {
   id: "sman1pabedilan",
   name: "SMAN 1 Pabedilan",
   icon: "🏫",
-  // **PERHATIAN:** GANTI DENGAN KOORDINAT AKURAT SMAN 1 PABEDILAN!
-  latitude: -6.728, // Placeholder Latitude
-  longitude: 108.48, // Placeholder Longitude
-  radiusMeters: 50, // Default radius yang akan dikirim
-  color: "green",
+  latitude: -6.728,
+  longitude: 108.48,
+  radiusMeters: 50,
+  color: "blue",
 };
 
-// Lokasi tambahan jika ada, misalnya ruang guru, lapangan, dll.
 const PRESET_LOCATIONS = [
   SCHOOL_LOCATION,
   {
@@ -42,15 +38,13 @@ const PRESET_LOCATIONS = [
     latitude: SCHOOL_LOCATION.latitude + 0.0001,
     longitude: SCHOOL_LOCATION.longitude - 0.0001,
     radiusMeters: 20,
-    color: "yellow",
+    color: "blue",
   },
 ];
-// ========================================
 
 function LocationMarker({ position, onLocationChange }) {
   const map = useMapEvents({
     click(e) {
-      // Memungkinkan klik pada peta untuk memilih lokasi
       onLocationChange({
         latitude: e.latlng.lat,
         longitude: e.latlng.lng,
@@ -67,7 +61,7 @@ function LocationMarker({ position, onLocationChange }) {
 export default function SchoolLocationPickerMap({
   onLocationSelect,
   initialLocation,
-  initialRadius, // Tambahkan prop untuk radius awal
+  initialRadius,
 }) {
   const defaultCenter = {
     latitude: SCHOOL_LOCATION.latitude,
@@ -77,7 +71,7 @@ export default function SchoolLocationPickerMap({
   const [position, setPosition] = useState(initialLocation || defaultCenter);
   const [radius, setRadius] = useState(
     initialLocation ? initialRadius : SCHOOL_LOCATION.radiusMeters
-  ); // State untuk radius
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
@@ -87,11 +81,8 @@ export default function SchoolLocationPickerMap({
 
   const searchTimeoutRef = useRef(null);
   const inputRef = useRef(null);
-
-  // Gunakan ref untuk menyimpan nilai terakhir yang diteruskan ke onLocationSelect
   const lastEmittedLocationRef = useRef(null);
 
-  // Efek inisialisasi (initialLocation diproses di sini)
   useEffect(() => {
     if (initialLocation) {
       setPosition(initialLocation);
@@ -99,10 +90,8 @@ export default function SchoolLocationPickerMap({
       setPosition(defaultCenter);
       setRadius(SCHOOL_LOCATION.radiusMeters);
     }
-  }, [initialLocation]); // Hanya run saat initialLocation berubah
+  }, [initialLocation]);
 
-  // **FIX**: Logika ini akan memicu loop jika `onLocationSelect` memicu state di parent
-  // Kita perlu memastikan pemanggilan terjadi HANYA jika ada perubahan nilai yang signifikan.
   useEffect(() => {
     const currentLocationKey = `${position.latitude.toFixed(
       5
@@ -130,7 +119,7 @@ export default function SchoolLocationPickerMap({
           longitude: pos.coords.longitude,
         };
         setPosition(newPos);
-        setRadius(SCHOOL_LOCATION.radiusMeters); // Reset radius
+        setRadius(SCHOOL_LOCATION.radiusMeters);
         setIsGettingLocation(false);
       },
       (error) => {
@@ -146,9 +135,7 @@ export default function SchoolLocationPickerMap({
     );
   };
 
-  // Multi-provider search (Sama seperti sebelumnya)
   const searchMultiProvider = async (query) => {
-    // ... (Logika searchMultiProvider sama seperti sebelumnya) ...
     const results = [];
 
     try {
@@ -207,7 +194,6 @@ export default function SchoolLocationPickerMap({
       console.warn("Nominatim search failed:", error);
     }
 
-    // 3. Deduplikasi
     const uniqueResults = [];
     results.forEach((result) => {
       const isDuplicate = uniqueResults.some((existing) => {
@@ -221,7 +207,7 @@ export default function SchoolLocationPickerMap({
               2
             )
         );
-        return distance < 50; // 50 meter threshold
+        return distance < 50;
       });
 
       if (!isDuplicate) {
@@ -234,7 +220,6 @@ export default function SchoolLocationPickerMap({
       .slice(0, 8);
   };
 
-  // Debounced autocomplete search
   const handleAutocompleteSearch = useCallback(
     async (query) => {
       if (query.trim().length < 3) {
@@ -260,26 +245,22 @@ export default function SchoolLocationPickerMap({
     [defaultCenter.latitude, defaultCenter.longitude]
   );
 
-  // Handle input change with debounce
   const handleInputChange = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
 
-    // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
 
-    // Set new timeout for autocomplete
     searchTimeoutRef.current = setTimeout(() => {
       handleAutocompleteSearch(value);
-    }, 500); // 500ms debounce
+    }, 500);
   };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
 
-    // Clear timeout if user clicks search button
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
@@ -306,27 +287,25 @@ export default function SchoolLocationPickerMap({
     }
   };
 
-  // **FIX**: Memastikan semua state diupdate secara bersamaan (position, radius, searchQuery)
   const handleSelectSearchResult = (result) => {
     const newPos = {
       latitude: parseFloat(result.lat),
       longitude: parseFloat(result.lon),
     };
     setPosition(newPos);
-    setRadius(SCHOOL_LOCATION.radiusMeters); // Set radius default sekolah saat memilih hasil pencarian
+    setRadius(SCHOOL_LOCATION.radiusMeters);
     setSearchQuery(result.display_name);
     setShowResults(false);
     inputRef.current?.focus();
   };
 
-  // **FIX**: Handle Preset juga perlu update radius
   const handleSelectPresetLocation = (preset) => {
     const newPos = {
       latitude: preset.latitude,
       longitude: preset.longitude,
     };
     setPosition(newPos);
-    setRadius(preset.radiusMeters || SCHOOL_LOCATION.radiusMeters); // Set radius dari preset atau default
+    setRadius(preset.radiusMeters || SCHOOL_LOCATION.radiusMeters);
     setSearchQuery(preset.name);
     setShowResults(false);
     inputRef.current?.focus();
@@ -377,7 +356,6 @@ export default function SchoolLocationPickerMap({
     inputRef.current?.focus();
   };
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (searchTimeoutRef.current) {
@@ -388,13 +366,13 @@ export default function SchoolLocationPickerMap({
 
   return (
     <div className="space-y-4">
-      {/* Preset Lokasi - Quick Select (UX Improvement) */}
-      <div className="card p-4 bg-blue-50/50 border-blue-200">
+      {/* Preset Lokasi - Blue Theme */}
+      <div className="card p-4 bg-gradient-to-br from-blue-50/80 to-blue-100/50 border-blue-200">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-sm">
             <span className="text-lg">{SCHOOL_LOCATION.icon}</span>
           </div>
-          <span className="font-semibold text-gray-900">
+          <span className="font-semibold text-blue-900">
             Lokasi Favorit (SMAN 1 Pabedilan)
           </span>
         </div>
@@ -406,8 +384,8 @@ export default function SchoolLocationPickerMap({
               className={`p-3 rounded-lg border-2 transition-all hover:scale-[1.02] active:scale-95 text-left ${
                 position.latitude === preset.latitude &&
                 position.longitude === preset.longitude
-                  ? "border-green-500 bg-green-50 shadow-md"
-                  : "border-gray-200 bg-white hover:border-blue-300"
+                  ? "border-blue-500 bg-gradient-to-r from-blue-50 to-blue-100 shadow-blue"
+                  : "border-blue-100 bg-white/90 hover:border-blue-300 hover:shadow-md"
               }`}
             >
               <div className="flex items-center gap-2">
@@ -416,12 +394,12 @@ export default function SchoolLocationPickerMap({
                   <p className="text-sm font-bold text-gray-900 line-clamp-1">
                     {preset.name}
                   </p>
-                  <p className="text-xs text-gray-600 font-mono mt-0.5">
+                  <p className="text-xs text-blue-600 font-mono mt-0.5">
                     Lat: {preset.latitude.toFixed(4)}, Lon:{" "}
                     {preset.longitude.toFixed(4)}
                   </p>
                 </div>
-                <div className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800 flex-shrink-0">
+                <div className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 flex-shrink-0 font-semibold">
                   Radius: {preset.radiusMeters}m
                 </div>
               </div>
@@ -434,7 +412,7 @@ export default function SchoolLocationPickerMap({
       <div className="relative">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-blue-400 z-10" />
             <input
               ref={inputRef}
               type="text"
@@ -442,15 +420,15 @@ export default function SchoolLocationPickerMap({
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder="Cari lokasi lain (minimal 3 huruf)..."
-              className="input-field pl-10"
+              className="input-field pl-10 border-blue-200 focus:border-blue-500 focus:ring-blue-500/20"
               autoComplete="off"
             />
             {searchQuery && (
               <button
                 onClick={handleClearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full hover:bg-gray-200 flex items-center justify-center transition-colors z-10"
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full hover:bg-blue-100 flex items-center justify-center transition-colors z-10"
               >
-                <X className="w-4 h-4 text-gray-500" />
+                <X className="w-4 h-4 text-blue-600" />
               </button>
             )}
             {isSearching && (
@@ -469,11 +447,11 @@ export default function SchoolLocationPickerMap({
           </button>
         </div>
 
-        {/* Autocomplete Results Dropdown (UX Improvement) */}
+        {/* Autocomplete Results Dropdown */}
         {showResults && searchResults.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 card max-h-80 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-            <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
-              <p className="text-xs font-semibold text-gray-500">
+          <div className="absolute top-full left-0 right-0 mt-2 card max-h-80 overflow-y-auto z-50 animate-fade-in border-blue-200">
+            <div className="px-4 py-2 border-b border-blue-100 bg-gradient-to-r from-blue-50/50 to-blue-100/30">
+              <p className="text-xs font-semibold text-blue-700">
                 {searchResults.length} hasil ditemukan
               </p>
             </div>
@@ -482,14 +460,18 @@ export default function SchoolLocationPickerMap({
                 key={idx}
                 onClick={() => handleSelectSearchResult(result)}
                 onMouseEnter={() => setSelectedIndex(idx)}
-                className={`w-full text-left px-4 py-3 transition-colors border-b border-gray-100 last:border-b-0 ${
-                  selectedIndex === idx ? "bg-blue-50" : "hover:bg-gray-50"
+                className={`w-full text-left px-4 py-3 transition-all border-b border-blue-50 last:border-b-0 ${
+                  selectedIndex === idx
+                    ? "bg-gradient-to-r from-blue-50 to-blue-100/50 border-l-2 border-l-blue-500"
+                    : "hover:bg-blue-50/30"
                 }`}
               >
                 <div className="flex items-start gap-3">
                   <div
-                    className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                      selectedIndex === idx ? "bg-blue-100" : "bg-blue-50"
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                      selectedIndex === idx
+                        ? "bg-gradient-to-br from-blue-100 to-blue-200 shadow-sm"
+                        : "bg-blue-50"
                     }`}
                   >
                     <MapPin
@@ -511,15 +493,15 @@ export default function SchoolLocationPickerMap({
                     )}
                     <div className="flex items-center gap-2 mt-1.5">
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${
+                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                           result.provider === "photon"
-                            ? "bg-green-100 text-green-800"
-                            : "bg-purple-100 text-purple-800"
+                            ? "bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800"
+                            : "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700"
                         }`}
                       >
                         {result.provider === "photon" ? "🎯 Akurat" : "📍 OSM"}
                       </span>
-                      <span className="text-xs text-gray-400 font-mono">
+                      <span className="text-xs text-blue-500 font-mono">
                         {parseFloat(result.lat).toFixed(5)},{" "}
                         {parseFloat(result.lon).toFixed(5)}
                       </span>
@@ -528,10 +510,9 @@ export default function SchoolLocationPickerMap({
                 </div>
               </button>
             ))}
-            <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
-              <p className="text-xs text-gray-500">
-                Gunakan ↑↓ untuk navigasi keyboard, Enter untuk pilih, Esc untuk
-                tutup
+            <div className="px-4 py-2 bg-blue-50/30 border-t border-blue-100">
+              <p className="text-xs text-blue-600">
+                ↑↓ navigasi keyboard • Enter pilih • Esc tutup
               </p>
             </div>
           </div>
@@ -543,17 +524,17 @@ export default function SchoolLocationPickerMap({
         <button
           onClick={handleGetCurrentLocation}
           disabled={isGettingLocation}
-          className="btn-secondary flex items-center justify-center gap-2"
+          className="btn-secondary flex items-center justify-center gap-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50"
         >
           {isGettingLocation ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
-              <span>Mendapatkan Lokasi...</span>
+              <span className="text-blue-700">Mendapatkan Lokasi...</span>
             </>
           ) : (
             <>
               <Crosshair className="w-5 h-5 text-blue-600" />
-              <span>Gunakan Lokasi Saat Ini</span>
+              <span className="text-blue-700">Gunakan Lokasi Saat Ini</span>
             </>
           )}
         </button>
@@ -561,38 +542,38 @@ export default function SchoolLocationPickerMap({
         <button
           onClick={() => setShowResults(false)}
           disabled={!showResults}
-          className="btn-secondary disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="btn-secondary disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 border-blue-200 hover:border-blue-400 hover:bg-blue-50"
         >
-          <X className="w-5 h-5" />
-          Tutup Hasil Cari
+          <X className="w-5 h-5 text-blue-600" />
+          <span className="text-blue-700">Tutup Hasil Cari</span>
         </button>
       </div>
 
-      {/* Selected Coordinates Display & Radius Control (UX Improvement) */}
-      <div className="card p-4 bg-indigo-50/50 border-indigo-200">
+      {/* Selected Coordinates Display & Radius Control */}
+      <div className="card p-4 bg-gradient-to-br from-blue-50/60 to-blue-100/40 border-blue-200">
         <div className="flex items-center gap-2 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-            <MapPin className="w-4 h-4 text-indigo-600" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-sm">
+            <MapPin className="w-4 h-4 text-blue-600" />
           </div>
-          <span className="font-semibold text-gray-900">
+          <span className="font-semibold text-blue-900">
             Lokasi & Radius Sesi
           </span>
         </div>
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-lg p-3 border border-gray-200">
-            <p className="text-xs text-gray-500 mb-1 font-medium">Latitude</p>
+          <div className="bg-white/90 rounded-lg p-3 border border-blue-100 shadow-sm">
+            <p className="text-xs text-blue-600 mb-1 font-medium">Latitude</p>
             <p className="font-mono text-sm font-bold text-gray-900">
               {position.latitude.toFixed(6)}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-3 border border-gray-200">
-            <p className="text-xs text-gray-500 mb-1 font-medium">Longitude</p>
+          <div className="bg-white/90 rounded-lg p-3 border border-blue-100 shadow-sm">
+            <p className="text-xs text-blue-600 mb-1 font-medium">Longitude</p>
             <p className="font-mono text-sm font-bold text-gray-900">
               {position.longitude.toFixed(6)}
             </p>
           </div>
-          <div className="bg-white rounded-lg p-3 border border-gray-200">
-            <label className="text-xs text-gray-500 mb-1 block font-medium">
+          <div className="bg-white/90 rounded-lg p-3 border border-blue-100 shadow-sm">
+            <label className="text-xs text-blue-600 mb-1 block font-medium">
               Radius (m)
             </label>
             <input
@@ -603,17 +584,17 @@ export default function SchoolLocationPickerMap({
               onChange={(e) =>
                 setRadius(Math.max(10, Math.min(500, Number(e.target.value))))
               }
-              className="input-field w-full p-0 h-auto text-sm font-bold text-gray-900 border-none focus:ring-0"
+              className="w-full p-0 h-auto text-sm font-bold text-gray-900 border-none focus:ring-0 bg-transparent"
             />
           </div>
         </div>
       </div>
 
       {/* Map */}
-      <div className="relative rounded-xl overflow-hidden border-2 border-gray-300 shadow-xl">
-        <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-gray-200">
-          <p className="text-xs font-medium text-gray-600 flex items-center gap-2">
-            <MapPin className="w-3 h-3 text-red-500" />
+      <div className="relative rounded-xl overflow-hidden border-2 border-blue-300 shadow-blue">
+        <div className="absolute top-4 left-4 z-[1000] glass-effect px-4 py-2 rounded-lg shadow-lg border border-blue-200">
+          <p className="text-xs font-medium text-blue-700 flex items-center gap-2">
+            <MapPin className="w-3 h-3 text-blue-500" />
             <span>Klik peta untuk mengatur titik GPS secara manual.</span>
           </p>
         </div>

@@ -1,7 +1,7 @@
 // src/app/teacher/page.jsx
 "use client";
 
-import { useState, useEffect, useCallback } from "react"; // Menambahkan useCallback
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTeacherComplete } from "@/hooks/useApi";
 import {
@@ -9,20 +9,13 @@ import {
   BookOpen,
   UserCheck,
   Calendar,
-  // Bell, // Tidak digunakan
   Award,
   TrendingUp,
   Activity,
   Clock,
-  // ClipboardList, // Tidak digunakan
-  // MessageSquare, // Tidak digunakan
-  // FileText, // Tidak digunakan
-  // PlusCircle, // Tidak digunakan
   CheckCircle,
-  // XCircle, // Tidak digunakan
   AlertTriangle,
   PlayCircle,
-  // StopCircle, // Tidak digunakan
   Eye,
   BarChart3,
   BookMarked,
@@ -32,18 +25,16 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
-// import { id } from "date-fns/locale"; // Tidak digunakan secara eksplisit, bisa dihapus jika format tanggal tidak memerlukannya
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
   const {
     teacher,
     profileLoading,
-    schedule, // Ini adalah array jadwal dari useTeacherComplete
+    schedule,
     scheduleLoading,
-    sessions, // Ini adalah array semua sesi absensi dari useTeacherComplete
+    sessions,
     getActiveSessions,
-    // getSessionsForDate, // Tidak digunakan secara langsung di loadDashboardData, bisa dipanggil jika perlu
     createSession,
     refetchSchedule,
   } = useTeacherComplete(user?.profileData?.id);
@@ -58,9 +49,8 @@ export default function TeacherDashboard() {
   });
 
   const [todaySchedule, setTodaySchedule] = useState([]);
-  const [activeSessionsData, setActiveSessionsData] = useState([]); // Untuk menampung sesi yang aktif saat ini
+  const [activeSessionsData, setActiveSessionsData] = useState([]);
 
-  // Fungsi untuk menghitung statistik, dibuat dengan useCallback agar stabil
   const calculateStats = useCallback(
     (activeSessionsResult, currentScheduleData, allSessionsData) => {
       console.log(
@@ -86,8 +76,6 @@ export default function TeacherDashboard() {
           return acc + studentList.length;
         }, 0) || 0;
 
-      // todayClassesCount akan dihitung dari state todaySchedule
-      // activeSessionsCount dari hasil getActiveSessions()
       const activeSessionsCount = activeSessionsResult?.sessions?.length || 0;
 
       let totalPresent = 0;
@@ -108,19 +96,18 @@ export default function TeacherDashboard() {
       setStats({
         totalClasses: uniqueClasses,
         totalStudents,
-        todayClasses: todaySchedule.length, // Diambil dari state todaySchedule
+        todayClasses: todaySchedule.length,
         attendanceRate: Math.round(attendanceRate * 10) / 10,
         activeSessions: activeSessionsCount,
         completedLessons:
           validAllSessions.filter((s) => s.status === "completed")?.length || 0,
       });
     },
-    [todaySchedule] // todaySchedule adalah dependensi karena digunakan untuk todayClasses
+    [todaySchedule]
   );
 
-  // Fungsi untuk memuat data dashboard, dibuat dengan useCallback
   const loadDashboardData = useCallback(async () => {
-    if (!getActiveSessions) return; // Pastikan fungsi sudah ada
+    if (!getActiveSessions) return;
 
     console.log(
       "loadDashboardData triggered. Schedule from hook:",
@@ -137,7 +124,7 @@ export default function TeacherDashboard() {
       if (scheduleArray.length > 0) {
         const today = format(new Date(), "yyyy-MM-dd");
         const filteredTodaySchedule = scheduleArray.filter((item) => {
-          const itemDate = item.date ? new Date(item.date) : new Date(); // Default ke hari ini jika tanggal tidak ada
+          const itemDate = item.date ? new Date(item.date) : new Date();
           const scheduleDate = format(itemDate, "yyyy-MM-dd");
           return scheduleDate === today;
         });
@@ -146,20 +133,15 @@ export default function TeacherDashboard() {
         setTodaySchedule([]);
       }
 
-      // Panggil calculateStats dengan data yang relevan
-      // `schedule` dan `sessions` dari hook useTeacherComplete adalah sumber data utama
       calculateStats(loadedActiveSessions, schedule, sessions);
     } catch (error) {
       console.error("Error loading dashboard data:", error);
       setTodaySchedule([]);
-      // Reset stats ke nilai default jika ada error
-      calculateStats({ sessions: [] }, [], []); // Berikan nilai default array kosong
+      calculateStats({ sessions: [] }, [], []);
     }
   }, [getActiveSessions, schedule, sessions, calculateStats]);
 
   useEffect(() => {
-    // Hanya jalankan loadDashboardData jika teacher (profile) sudah ada dan user ID tersedia
-    // Perubahan pada schedule atau sessions dari hook juga akan memicu ini
     if (user?.profileData?.id && teacher) {
       loadDashboardData();
     }
@@ -168,19 +150,11 @@ export default function TeacherDashboard() {
   const handleCreateSession = async (scheduleId) => {
     try {
       await createSession(scheduleId, 30);
-      // Setelah sesi dibuat, refetch data yang relevan.
-      // Perubahan pada `schedule` atau `sessions` akan memicu `useEffect` di atas
-      // yang kemudian memanggil `loadDashboardData` dan `calculateStats`.
       if (refetchSchedule) {
         await refetchSchedule();
       }
-      // Mungkin perlu juga refetch untuk sessions jika createSession tidak otomatis memperbarui `sessions` dari hook
-      // Atau, jika `getActiveSessions` mengembalikan data sesi terbaru dan memperbarui state `sessions` di `useTeacherAttendance`
       const newActiveSessions = await getActiveSessions();
       setActiveSessionsData(newActiveSessions?.sessions || []);
-      // Untuk memastikan stats terupdate segera, bisa panggil calculateStats dengan data terbaru yang diketahui
-      // Namun, idealnya mengandalkan alur re-render dari perubahan state hook
-      // calculateStats(newActiveSessions, schedule, sessions); // Mungkin menggunakan `schedule` dan `sessions` yang belum terupdate dari refetch
     } catch (error) {
       console.error("Error creating session:", error);
     }
@@ -246,13 +220,13 @@ export default function TeacherDashboard() {
   const getStatusColor = (status) => {
     switch (status) {
       case "completed":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 border border-green-200";
       case "in-progress":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 border border-blue-200";
       case "upcoming":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-700 border border-gray-200";
       default:
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 border border-yellow-200";
     }
   };
 
@@ -284,7 +258,7 @@ export default function TeacherDashboard() {
       return (
         <Link
           href={href}
-          className="p-4 text-left hover:bg-gray-50 rounded-lg transition-colors group"
+          className="p-4 text-left hover:bg-blue-50 rounded-lg transition-colors group"
         >
           <ButtonContent />
         </Link>
@@ -293,23 +267,21 @@ export default function TeacherDashboard() {
     return (
       <button
         onClick={onClick}
-        className="p-4 text-left hover:bg-gray-50 rounded-lg transition-colors group"
+        className="p-4 text-left hover:bg-blue-50 rounded-lg transition-colors group"
       >
         <ButtonContent />
       </button>
     );
   };
 
-  // Menampilkan loading jika profile guru ATAU jadwal sedang dimuat
   if (profileLoading || scheduleLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
-  // Jika teacher (profile) tidak berhasil dimuat setelah loading selesai
   if (!teacher) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen text-center">
@@ -320,16 +292,16 @@ export default function TeacherDashboard() {
         <p className="text-gray-600">
           Tidak dapat mengambil informasi profil guru. Silakan coba lagi nanti.
         </p>
-        {/* Anda bisa menambahkan tombol untuk refresh atau kembali */}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      {/* Header Section */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-gradient">
             Welcome back, {teacher?.name || user?.name || "Teacher"}!
           </h1>
           <p className="text-gray-600 mt-1">
@@ -338,12 +310,15 @@ export default function TeacherDashboard() {
         </div>
       </div>
 
+      {/* Active Sessions Alert - Menggunakan skema warna blue dari tema */}
       {activeSessionsData.length > 0 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="glass-effect border-2 border-blue-300 rounded-lg p-4 shadow-blue">
           <div className="flex items-center">
-            <Activity className="w-5 h-5 text-blue-600 mr-2" />
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg mr-3 shadow-sm">
+              <Activity className="w-5 h-5 text-white" />
+            </div>
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-blue-900">
+              <h3 className="text-sm font-semibold text-blue-900">
                 Active Attendance Sessions ({activeSessionsData.length})
               </h3>
               <p className="text-sm text-blue-700 mt-1">
@@ -352,7 +327,7 @@ export default function TeacherDashboard() {
             </div>
             <Link
               href="/teacher/attendance/active-sessions"
-              className="btn-primary btn-sm"
+              className="btn-primary btn-sm ml-4 flex-shrink-0"
             >
               <Eye className="w-4 h-4 mr-1" /> View Sessions
             </Link>
@@ -361,26 +336,28 @@ export default function TeacherDashboard() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Today's Schedule Section */}
         <div className="lg:col-span-2">
           <div className="card p-6">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="text-xl font-semibold text-blue-900">
                 Today's Schedule
               </h2>
               <Link
                 href="/teacher/schedule"
-                className="text-green-600 hover:text-green-700 text-sm font-medium"
+                className="text-blue-600 hover:text-blue-700 text-sm font-medium transition-colors flex items-center gap-1"
               >
                 View Full Schedule
+                <TrendingUp className="w-4 h-4 rotate-90" />
               </Link>
             </div>
             {scheduleLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
               </div>
             ) : todaySchedule.length === 0 ? (
               <div className="text-center py-8">
-                <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <Calendar className="w-12 h-12 text-blue-300 mx-auto mb-3" />
                 <p className="text-gray-500">No classes scheduled for today</p>
                 {Array.isArray(schedule) &&
                   schedule.length === 0 &&
@@ -400,11 +377,11 @@ export default function TeacherDashboard() {
                   return (
                     <div
                       key={scheduleItem.id}
-                      className="flex items-center justify-between p-4 border border-gray-200/60 rounded-lg hover:shadow-sm transition-all"
+                      className="flex items-center justify-between p-4 border-gradient rounded-lg hover:shadow-blue transition-all bg-white/50"
                     >
                       <div className="flex items-start space-x-4">
-                        <div className="text-center min-w-[80px]">
-                          <div className="text-sm font-semibold text-gray-900">
+                        <div className="text-center min-w-[80px] bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-2 border border-blue-200">
+                          <div className="text-sm font-semibold text-blue-900">
                             {scheduleItem.startTime
                               ? format(
                                   new Date(scheduleItem.startTime),
@@ -412,14 +389,14 @@ export default function TeacherDashboard() {
                                 )
                               : "--:--"}
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-blue-600">
                             {scheduleItem.endTime
                               ? format(new Date(scheduleItem.endTime), "HH:mm")
                               : "--:--"}
                           </div>
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">
+                          <h3 className="font-semibold text-blue-900">
                             {scheduleItem.subject?.name || "Subject"}
                           </h3>
                           <p className="text-sm text-gray-600">
@@ -434,13 +411,13 @@ export default function TeacherDashboard() {
                       </div>
                       <div className="flex items-center space-x-2">
                         {hasActiveSession && (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-300">
                             <Activity className="w-3 h-3 mr-1" />
                             Session Active
                           </span>
                         )}
                         <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
                             status
                           )}`}
                         >
@@ -467,44 +444,54 @@ export default function TeacherDashboard() {
           </div>
         </div>
 
+        {/* Quick Overview Sidebar - Menggunakan skema warna dari tema */}
         <div className="space-y-6">
           <div className="card p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="text-xl font-semibold text-blue-900 mb-4">
               Quick Overview
             </h2>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              {/* Active Sessions */}
+              <div className="flex items-center justify-between p-3 glass-effect border-gradient rounded-lg hover:shadow-blue transition-all cursor-pointer">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Activity className="w-4 h-4 text-blue-600" />
+                  <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-sm">
+                    <Activity className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm text-gray-600">Active Sessions</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Active Sessions
+                  </span>
                 </div>
-                <span className="font-semibold text-blue-600">
+                <span className="font-bold text-blue-600 text-lg">
                   {stats.activeSessions}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
+
+              {/* Completed Lessons */}
+              <div className="flex items-center justify-between p-3 glass-effect rounded-lg hover:shadow-sm transition-all cursor-pointer border border-green-200 bg-green-50/50">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
+                  <div className="p-2 bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-sm">
+                    <CheckCircle className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm font-medium text-gray-700">
                     Completed Lessons
                   </span>
                 </div>
-                <span className="font-semibold text-green-600">
+                <span className="font-bold text-green-600 text-lg">
                   {stats.completedLessons}
                 </span>
               </div>
-              <div className="flex items-center justify-between">
+
+              {/* Average Attendance */}
+              <div className="flex items-center justify-between p-3 glass-effect rounded-lg hover:shadow-sm transition-all cursor-pointer border border-orange-200 bg-orange-50/50">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <Target className="w-4 h-4 text-orange-600" />
+                  <div className="p-2 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg shadow-sm">
+                    <Target className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-sm text-gray-600">Avg. Attendance</span>
+                  <span className="text-sm font-medium text-gray-700">
+                    Avg. Attendance
+                  </span>
                 </div>
-                <span className="font-semibold text-orange-600">
+                <span className="font-bold text-orange-600 text-lg">
                   {stats.attendanceRate}%
                 </span>
               </div>

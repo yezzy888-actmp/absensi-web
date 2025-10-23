@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { useTeacherAttendance } from "@/hooks/useApi"; // Ensure this path is correct
+import { useTeacherAttendance } from "@/hooks/useApi";
 import {
   Calendar,
   Clock,
@@ -23,10 +23,9 @@ export default function HistoryAttendancePage() {
   const { user } = useAuth();
   const teacherId = user?.profileData?.id;
 
-  // State for filters and pagination
   const [filters, setFilters] = useState({
-    status: "", // HADIR, ALPHA, IZIN, SAKIT
-    active: "", // New filter for active sessions (true/false)
+    status: "",
+    active: "",
   });
   const [pagination, setPagination] = useState({
     page: 1,
@@ -37,7 +36,6 @@ export default function HistoryAttendancePage() {
     direction: "desc",
   });
 
-  // Fetch attendance sessions using the custom hook
   const {
     sessions: rawSessions,
     loading: sessionsLoading,
@@ -45,7 +43,6 @@ export default function HistoryAttendancePage() {
     getAttendanceSessions,
   } = useTeacherAttendance(teacherId);
 
-  // Memoize all subjects and classes for filter dropdowns (though now unused, keeping for reference if needed elsewhere)
   const allSubjects = useMemo(() => {
     const subjects = new Map();
     rawSessions.forEach((session) => {
@@ -70,7 +67,6 @@ export default function HistoryAttendancePage() {
     return Array.from(classes.values());
   }, [rawSessions]);
 
-  // Effect to refetch sessions when filters or pagination change
   useEffect(() => {
     if (teacherId) {
       const fetchParams = {
@@ -80,25 +76,16 @@ export default function HistoryAttendancePage() {
         sortBy: sortConfig.key,
         sortOrder: sortConfig.direction,
       };
-      // Convert date to YYYY-MM-DD format if it exists for API consistency
-      // This part will now only apply if 'date' filter is reintroduced.
-      // if (fetchParams.date) {
-      //   fetchParams.date = new Date(fetchParams.date)
-      //     .toISOString()
-      //     .split("T")[0];
-      // }
       getAttendanceSessions(fetchParams);
     }
   }, [teacherId, pagination, filters, sortConfig, getAttendanceSessions]);
 
-  // Handle filter changes
   const handleFilterChange = useCallback((e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setPagination((prev) => ({ ...prev, page: 1 })); // Reset to first page on filter change
+    setPagination((prev) => ({ ...prev, page: 1 }));
   }, []);
 
-  // Handle sorting
   const handleSort = useCallback((key) => {
     setSortConfig((prev) => ({
       key,
@@ -106,7 +93,6 @@ export default function HistoryAttendancePage() {
     }));
   }, []);
 
-  // Filter and sort sessions client-side
   const filteredAndSortedSessions = useMemo(() => {
     let sessions = [];
     rawSessions.forEach((session) => {
@@ -122,19 +108,14 @@ export default function HistoryAttendancePage() {
 
     return sessions
       .filter((att) => {
-        // Only status and active filters remain
         if (filters.status && att.status !== filters.status) return false;
-        // 'active' filter is typically on the session itself, not individual attendance records.
-        // If the backend filters `rawSessions` by `active`, this client-side filter might be unnecessary.
-        // If you need to filter individual attendance records by 'active' status of their session,
-        // you'd need to add `session.active` to your session object and filter here.
         return true;
       })
       .sort((a, b) => {
         const aValue = a[sortConfig.key];
         const bValue = b[sortConfig.key];
 
-        if (aValue === undefined || bValue === undefined) return 0; // Handle missing keys
+        if (aValue === undefined || bValue === undefined) return 0;
 
         if (
           sortConfig.key === "date" ||
@@ -150,7 +131,6 @@ export default function HistoryAttendancePage() {
             ? dateA.getTime() - dateB.getTime()
             : dateB.getTime() - dateA.getTime();
         } else if (typeof aValue === "string" && typeof bValue === "string") {
-          // Handle nested properties for sorting (e.g., 'schedule.subject.name')
           const getNestedValue = (obj, path) => {
             return path.split(".").reduce((acc, part) => acc && acc[part], obj);
           };
@@ -180,7 +160,6 @@ export default function HistoryAttendancePage() {
     return filteredAndSortedSessions;
   }, [filteredAndSortedSessions]);
 
-  // Helper function to format attendance status
   const formatStatus = (status) => {
     switch (status) {
       case "HADIR":
@@ -199,15 +178,15 @@ export default function HistoryAttendancePage() {
   const getStatusColor = (status) => {
     switch (status) {
       case "HADIR":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 border border-green-200";
       case "ALPHA":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 border border-red-200";
       case "IZIN":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 border border-yellow-200";
       case "SAKIT":
-        return "bg-orange-100 text-orange-800";
+        return "bg-orange-100 text-orange-800 border border-orange-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
@@ -306,153 +285,178 @@ export default function HistoryAttendancePage() {
         </div>
       </div>
 
-      {/* Filter and Search Section */}
-      <div className="card p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="col-span-1">
-          <label
-            htmlFor="status-filter"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Status Absensi
-          </label>
-          <select
-            id="status-filter"
-            name="status"
-            value={filters.status}
-            onChange={handleFilterChange}
-            className="input-field"
-          >
-            <option value="">Semua Status</option>
-            <option value="HADIR">Hadir</option>
-            <option value="ALPHA">Tidak Hadir (Alpha)</option>
-            <option value="IZIN">Izin</option>
-            <option value="SAKIT">Sakit</option>
-          </select>
+      {/* Filter Section - Updated dengan warna blue */}
+      <div className="card p-6">
+        <div className="flex items-center mb-4">
+          <Filter className="w-5 h-5 text-blue-600 mr-2" />
+          <h2 className="text-lg font-semibold text-gray-900">Filter Data</h2>
         </div>
-        <div className="col-span-1">
-          <label
-            htmlFor="active-filter"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Sesi Aktif
-          </label>
-          <select
-            id="active-filter"
-            name="active"
-            value={filters.active}
-            onChange={handleFilterChange}
-            className="input-field"
-          >
-            <option value="">Semua Sesi</option>
-            <option value="true">Aktif</option>
-            <option value="false">Tidak Aktif</option>
-          </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="col-span-1">
+            <label
+              htmlFor="status-filter"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Status Absensi
+            </label>
+            <select
+              id="status-filter"
+              name="status"
+              value={filters.status}
+              onChange={handleFilterChange}
+              className="input-field"
+            >
+              <option value="">Semua Status</option>
+              <option value="HADIR">Hadir</option>
+              <option value="ALPHA">Tidak Hadir (Alpha)</option>
+              <option value="IZIN">Izin</option>
+              <option value="SAKIT">Sakit</option>
+            </select>
+          </div>
+          <div className="col-span-1">
+            <label
+              htmlFor="active-filter"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Sesi Aktif
+            </label>
+            <select
+              id="active-filter"
+              name="active"
+              value={filters.active}
+              onChange={handleFilterChange}
+              className="input-field"
+            >
+              <option value="">Semua Sesi</option>
+              <option value="true">Aktif</option>
+              <option value="false">Tidak Aktif</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* Attendance History Table/List */}
+      {/* Attendance History Table - Updated dengan warna blue */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-blue-100">
+            <thead className="bg-blue-50">
               <tr>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
                   onClick={() => handleSort("date")}
                 >
-                  Tanggal
-                  {sortConfig.key === "date" &&
-                    (sortConfig.direction === "asc" ? (
-                      <ChevronUp className="inline-block w-4 h-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="inline-block w-4 h-4 ml-1" />
-                    ))}
+                  <div className="flex items-center">
+                    Tanggal
+                    {sortConfig.key === "date" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ))}
+                  </div>
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
                   onClick={() => handleSort("schedule.day")}
                 >
-                  Hari
-                  {sortConfig.key === "schedule.day" &&
-                    (sortConfig.direction === "asc" ? (
-                      <ChevronUp className="inline-block w-4 h-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="inline-block w-4 h-4 ml-1" />
-                    ))}
+                  <div className="flex items-center">
+                    Hari
+                    {sortConfig.key === "schedule.day" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ))}
+                  </div>
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
                   onClick={() => handleSort("schedule.startTime")}
                 >
-                  Waktu
-                  {sortConfig.key === "schedule.startTime" &&
-                    (sortConfig.direction === "asc" ? (
-                      <ChevronUp className="inline-block w-4 h-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="inline-block w-4 h-4 ml-1" />
-                    ))}
+                  <div className="flex items-center">
+                    Waktu
+                    {sortConfig.key === "schedule.startTime" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ))}
+                  </div>
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
                   onClick={() => handleSort("schedule.subject.name")}
                 >
-                  Mata Pelajaran
-                  {sortConfig.key === "schedule.subject.name" &&
-                    (sortConfig.direction === "asc" ? (
-                      <ChevronUp className="inline-block w-4 h-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="inline-block w-4 h-4 ml-1" />
-                    ))}
+                  <div className="flex items-center">
+                    Mata Pelajaran
+                    {sortConfig.key === "schedule.subject.name" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ))}
+                  </div>
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
                   onClick={() => handleSort("schedule.class.name")}
                 >
-                  Kelas
-                  {sortConfig.key === "schedule.class.name" &&
-                    (sortConfig.direction === "asc" ? (
-                      <ChevronUp className="inline-block w-4 h-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="inline-block w-4 h-4 ml-1" />
-                    ))}
+                  <div className="flex items-center">
+                    Kelas
+                    {sortConfig.key === "schedule.class.name" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ))}
+                  </div>
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
                   onClick={() => handleSort("student.name")}
                 >
-                  Nama Siswa
-                  {sortConfig.key === "student.name" &&
-                    (sortConfig.direction === "asc" ? (
-                      <ChevronUp className="inline-block w-4 h-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="inline-block w-4 h-4 ml-1" />
-                    ))}
+                  <div className="flex items-center">
+                    Nama Siswa
+                    {sortConfig.key === "student.name" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ))}
+                  </div>
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                  className="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider cursor-pointer hover:bg-blue-100 transition-colors"
                   onClick={() => handleSort("status")}
                 >
-                  Status
-                  {sortConfig.key === "status" &&
-                    (sortConfig.direction === "asc" ? (
-                      <ChevronUp className="inline-block w-4 h-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="inline-block w-4 h-4 ml-1" />
-                    ))}
+                  <div className="flex items-center">
+                    Status
+                    {sortConfig.key === "status" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ChevronUp className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ) : (
+                        <ChevronDown className="inline-block w-4 h-4 ml-1 text-blue-600" />
+                      ))}
+                  </div>
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-blue-50">
               {paginatedData.length > 0 ? (
-                paginatedData.map((att) => (
-                  <tr key={att.id}>
+                paginatedData.map((att, index) => (
+                  <tr
+                    key={att.id}
+                    className={`hover:bg-blue-50 transition-colors ${
+                      index % 2 === 0 ? "bg-white" : "bg-blue-25"
+                    }`}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {new Date(att.date).toLocaleDateString("id-ID")}
                     </td>
@@ -460,20 +464,29 @@ export default function HistoryAttendancePage() {
                       {dayNames[att.schedule?.day] || att.schedule?.day}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {att.schedule?.startTime} - {att.schedule?.endTime}
+                      <div className="flex items-center">
+                        <Clock className="w-4 h-4 text-blue-500 mr-2" />
+                        {att.schedule?.startTime} - {att.schedule?.endTime}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {att.schedule?.subject?.name}
+                      <div className="flex items-center">
+                        <BookOpen className="w-4 h-4 text-blue-500 mr-2" />
+                        {att.schedule?.subject?.name}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {att.schedule?.class?.name}
+                      <div className="flex items-center">
+                        <Users className="w-4 h-4 text-blue-500 mr-2" />
+                        {att.schedule?.class?.name}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {att.student?.name || "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(
                           att.status
                         )}`}
                       >
@@ -488,9 +501,11 @@ export default function HistoryAttendancePage() {
                     colSpan="8"
                     className="px-6 py-12 text-center text-gray-500"
                   >
-                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                    Tidak ada riwayat absensi ditemukan untuk filter yang
-                    dipilih.
+                    <AlertCircle className="w-12 h-12 mx-auto mb-4 text-blue-300" />
+                    <p className="font-medium text-gray-700">
+                      Tidak ada riwayat absensi ditemukan
+                    </p>
+                    <p className="text-sm mt-1">untuk filter yang dipilih.</p>
                   </td>
                 </tr>
               )}
@@ -498,8 +513,8 @@ export default function HistoryAttendancePage() {
           </table>
         </div>
 
-        {/* Pagination Controls */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200">
+        {/* Pagination Controls - Updated dengan warna blue */}
+        <div className="flex items-center justify-between px-6 py-4 bg-blue-50 border-t-2 border-blue-100">
           <button
             onClick={() =>
               setPagination((prev) => ({
@@ -508,11 +523,11 @@ export default function HistoryAttendancePage() {
               }))
             }
             disabled={pagination.page === 1}
-            className="btn-secondary px-3 py-1.5 text-sm"
+            className="btn-secondary px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Sebelumnya
           </button>
-          <span className="text-sm text-gray-700">
+          <span className="text-sm font-medium text-blue-900">
             Halaman {pagination.page} dari {totalPages}
           </span>
           <button
@@ -523,7 +538,7 @@ export default function HistoryAttendancePage() {
               }))
             }
             disabled={pagination.page === totalPages}
-            className="btn-secondary px-3 py-1.5 text-sm"
+            className="btn-secondary px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Berikutnya
           </button>

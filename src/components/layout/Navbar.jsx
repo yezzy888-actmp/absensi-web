@@ -66,7 +66,7 @@ const Navbar = ({ userRole = "admin", onMenuToggle, isSidebarOpen }) => {
         <div className="flex items-center space-x-4">
           <button
             onClick={onMenuToggle}
-            className="p-2 rounded-lg hover:bg-white/20 transition-colors lg:hidden"
+            className="p-2 rounded-lg hover:bg-blue-50/50 transition-colors lg:hidden text-gray-700"
           >
             {isSidebarOpen ? (
               <X className="w-5 h-5" />
@@ -85,7 +85,7 @@ const Navbar = ({ userRole = "admin", onMenuToggle, isSidebarOpen }) => {
         {/* Right Section */}
         <div className="flex items-center space-x-3">
           {/* Mobile Search Button */}
-          <button className="p-2 rounded-lg hover:bg-white/20 transition-colors md:hidden">
+          <button className="p-2 rounded-lg hover:bg-blue-50/50 transition-colors md:hidden text-gray-700">
             <Search className="w-5 h-5" />
           </button>
 
@@ -93,9 +93,9 @@ const Navbar = ({ userRole = "admin", onMenuToggle, isSidebarOpen }) => {
           <div className="relative">
             <button
               onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white/20 transition-colors"
+              className="flex items-center space-x-2 p-2 rounded-lg hover:bg-blue-50/50 transition-colors"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue">
                 <span className="text-xs font-bold text-white">
                   {getUserInitials()}
                 </span>
@@ -104,7 +104,7 @@ const Navbar = ({ userRole = "admin", onMenuToggle, isSidebarOpen }) => {
                 <p className="text-sm font-medium text-gray-900">
                   {getDisplayName()}
                 </p>
-                <p className="text-xs text-gray-500">{getUserEmail()}</p>
+                <p className="text-xs text-gray-600">{getUserEmail()}</p>
               </div>
             </button>
 
@@ -114,7 +114,7 @@ const Navbar = ({ userRole = "admin", onMenuToggle, isSidebarOpen }) => {
                 {/* User Info Section */}
                 <div className="p-4 border-b border-gray-200/30">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue">
                       <span className="text-sm font-bold text-white">
                         {getUserInitials()}
                       </span>
@@ -123,10 +123,10 @@ const Navbar = ({ userRole = "admin", onMenuToggle, isSidebarOpen }) => {
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {getDisplayName()}
                       </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <p className="text-xs text-gray-600 truncate">
                         {getUserEmail()}
                       </p>
-                      <p className="text-xs text-blue-600 capitalize font-medium">
+                      <p className="text-xs text-blue-600 capitalize font-medium mt-1">
                         {user?.role?.toLowerCase() || userRole}
                       </p>
                     </div>
@@ -138,10 +138,10 @@ const Navbar = ({ userRole = "admin", onMenuToggle, isSidebarOpen }) => {
                   <hr className="my-2 border-gray-200/30" />
                   <button
                     onClick={handleLogout}
-                    className="flex items-center space-x-2 w-full p-2 text-left hover:bg-red-50/50 rounded-lg transition-colors text-red-600"
+                    className="flex items-center space-x-2 w-full p-2 text-left hover:bg-red-50 rounded-lg transition-colors text-red-600"
                   >
                     <LogOut className="w-4 h-4" />
-                    <span className="text-sm">Sign out</span>
+                    <span className="text-sm font-medium">Sign out</span>
                   </button>
                 </div>
               </div>

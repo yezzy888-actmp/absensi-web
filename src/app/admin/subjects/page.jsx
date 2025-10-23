@@ -143,20 +143,22 @@ export default function SubjectManagementPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 min-h-screen gradient-bg">
       {/* Header dan Controls */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Manajemen Mata Pelajaran</h1>
-          <p className="text-gray-600">Kelola mata pelajaran sekolah</p>
+          <h1 className="text-2xl font-bold text-gradient">
+            Manajemen Mata Pelajaran
+          </h1>
+          <p className="text-muted-foreground">Kelola mata pelajaran sekolah</p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <Input
             placeholder="Cari mata pelajaran..."
-            className="max-w-xs"
+            className="max-w-xs input-field"
             onChange={handleSearch}
           />
-          <Button onClick={openCreateModal}>
+          <Button onClick={openCreateModal} className="btn-primary">
             <PlusCircle className="w-4 h-4 mr-2" />
             Tambah Baru
           </Button>
@@ -165,7 +167,7 @@ export default function SubjectManagementPage() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+        <div className="glass-effect border-2 border-red-400 text-red-700 px-4 py-3 rounded-lg">
           {error}
         </div>
       )}
@@ -173,33 +175,72 @@ export default function SubjectManagementPage() {
       {/* Loading State */}
       {loading && (
         <div className="flex justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <Loader2
+            className="w-8 h-8 animate-spin"
+            style={{ color: "hsl(var(--blue-600))" }}
+          />
         </div>
       )}
 
       {/* Subjects Table */}
       {!loading && !error && (
         <>
-          <div className="border rounded-lg">
+          <div className="card border-2">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>Nama Mata Pelajaran</TableHead>
-                  <TableHead className="text-center">Jumlah Guru</TableHead>
-                  <TableHead className="text-center">Jumlah Jadwal</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                <TableRow
+                  className="border-b-2"
+                  style={{ borderColor: "hsl(var(--blue-200))" }}
+                >
+                  <TableHead
+                    className="font-semibold"
+                    style={{ color: "hsl(var(--blue-800))" }}
+                  >
+                    Nama Mata Pelajaran
+                  </TableHead>
+                  <TableHead
+                    className="text-center font-semibold"
+                    style={{ color: "hsl(var(--blue-800))" }}
+                  >
+                    Jumlah Guru
+                  </TableHead>
+                  <TableHead
+                    className="text-center font-semibold"
+                    style={{ color: "hsl(var(--blue-800))" }}
+                  >
+                    Jumlah Jadwal
+                  </TableHead>
+                  <TableHead
+                    className="text-right font-semibold"
+                    style={{ color: "hsl(var(--blue-800))" }}
+                  >
+                    Aksi
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {subjects?.map((subject) => (
-                  <TableRow key={subject.id}>
-                    <TableCell className="font-medium">
+                  <TableRow
+                    key={subject.id}
+                    className="border-b"
+                    style={{ borderColor: "hsl(var(--blue-100))" }}
+                  >
+                    <TableCell
+                      className="font-medium"
+                      style={{ color: "hsl(var(--blue-900))" }}
+                    >
                       {subject.name}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell
+                      className="text-center"
+                      style={{ color: "hsl(var(--blue-700))" }}
+                    >
                       {subject._count?.teachers || 0}
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell
+                      className="text-center"
+                      style={{ color: "hsl(var(--blue-700))" }}
+                    >
                       {subject._count?.schedules || 0}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
@@ -207,6 +248,7 @@ export default function SubjectManagementPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => openEditModal(subject)}
+                        className="btn-secondary"
                       >
                         <Edit className="w-4 h-4 mr-2" />
                         Edit
@@ -215,6 +257,7 @@ export default function SubjectManagementPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => openManageTeachersModal(subject)}
+                        className="btn-secondary"
                       >
                         <Users className="w-4 h-4 mr-2" />
                         Guru
@@ -223,6 +266,7 @@ export default function SubjectManagementPage() {
                         variant="destructive"
                         size="sm"
                         onClick={() => handleDelete(subject.id)}
+                        className="btn-destructive"
                       >
                         <Trash className="w-4 h-4 mr-2" />
                         Hapus
@@ -254,7 +298,10 @@ export default function SubjectManagementPage() {
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label
+              className="block text-sm font-medium mb-1"
+              style={{ color: "hsl(var(--blue-800))" }}
+            >
               Nama Mata Pelajaran
             </label>
             <Input
@@ -262,6 +309,7 @@ export default function SubjectManagementPage() {
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
+              className="input-field"
               required
             />
           </div>
@@ -270,10 +318,11 @@ export default function SubjectManagementPage() {
               type="button"
               variant="outline"
               onClick={() => setShowCreateModal(false)}
+              className="btn-secondary"
             >
               Batal
             </Button>
-            <Button type="submit">
+            <Button type="submit" className="btn-primary">
               {formData.id ? "Simpan Perubahan" : "Buat Mata Pelajaran"}
             </Button>
           </div>
@@ -288,10 +337,18 @@ export default function SubjectManagementPage() {
         size="lg"
       >
         <div className="space-y-4">
-          <div className="border rounded-lg p-4">
-            <h3 className="font-medium mb-2">Guru yang Ditugaskan</h3>
+          <div
+            className="glass-effect border-2 rounded-lg p-4"
+            style={{ borderColor: "hsl(var(--blue-200))" }}
+          >
+            <h3 className="font-medium mb-2 text-gradient">
+              Guru yang Ditugaskan
+            </h3>
             {selectedTeachers.length === 0 ? (
-              <div className="text-gray-500 text-center py-4">
+              <div
+                className="text-center py-4"
+                style={{ color: "hsl(var(--muted-foreground))" }}
+              >
                 Belum ada guru yang ditugaskan
               </div>
             ) : (
@@ -299,9 +356,12 @@ export default function SubjectManagementPage() {
                 {selectedTeachers.map((teacher) => (
                   <div
                     key={teacher.id}
-                    className="flex items-center justify-between p-2 border rounded"
+                    className="flex items-center justify-between p-2 glass-effect rounded"
+                    style={{ borderColor: "hsl(var(--blue-100))" }}
                   >
-                    <span>{teacher.name}</span>
+                    <span style={{ color: "hsl(var(--blue-900))" }}>
+                      {teacher.name}
+                    </span>
                     <Button
                       variant="ghost"
                       size="sm"

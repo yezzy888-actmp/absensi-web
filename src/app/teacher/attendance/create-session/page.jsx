@@ -1,4 +1,4 @@
-// src/app/teacher/attendance/create-session/page.jsx (KODE LENGKAP DENGAN PERBAIKAN TAMPILAN UX)
+// src/app/teacher/attendance/create-session/page.jsx (HARMONIZED COLORS)
 "use client";
 
 import { useState, useEffect } from "react";
@@ -23,7 +23,7 @@ import {
   QrCode,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import SchoolLocationPickerMap from "@/components/guru/SchoolLocationPickerMap"; // Import komponen peta baru
+import SchoolLocationPickerMap from "@/components/guru/SchoolLocationPickerMap";
 
 export default function CreateAttendanceSessionPage() {
   const router = useRouter();
@@ -32,16 +32,13 @@ export default function CreateAttendanceSessionPage() {
 
   const [selectedSchedule, setSelectedSchedule] = useState(null);
   const [sessionDuration, setSessionDuration] = useState(30);
-  const [sessionType, setSessionType] = useState("manual"); // manual, qr
+  const [sessionType, setSessionType] = useState("manual");
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
   const [isCreating, setIsCreating] = useState(false);
-
-  // State baru untuk data lokasi dari peta
   const [locationData, setLocationData] = useState(null);
 
-  // Get teacher schedule
   const {
     schedule,
     loading: scheduleLoading,
@@ -50,7 +47,6 @@ export default function CreateAttendanceSessionPage() {
     refetch: refetchSchedule,
   } = useTeacherSchedule(teacherId);
 
-  // Get teacher attendance functions
   const {
     createSession,
     getActiveSessions,
@@ -58,7 +54,6 @@ export default function CreateAttendanceSessionPage() {
     loading: sessionLoading,
   } = useTeacherAttendance(teacherId);
 
-  // Get today's schedule (redundant check for date logic)
   const {
     data: todayScheduleData,
     loading: todayLoading,
@@ -78,14 +73,12 @@ export default function CreateAttendanceSessionPage() {
     }
   );
 
-  // Get active sessions on component mount
   useEffect(() => {
     if (teacherId) {
       getActiveSessions();
     }
   }, [teacherId, getActiveSessions]);
 
-  // Get current time info
   const getCurrentTimeInfo = () => {
     const now = new Date();
     const currentTime = now.toTimeString().slice(0, 5);
@@ -101,19 +94,16 @@ export default function CreateAttendanceSessionPage() {
     return { currentTime, currentDay, currentDate };
   };
 
-  // Get schedule for selected date
   const getScheduleForSelectedDate = () => {
     const date = new Date(selectedDate);
     const dayName = date
       .toLocaleDateString("id-ID", { weekday: "long" })
       .toUpperCase();
 
-    // Gunakan data dari useTeacherSchedule yang lebih lengkap
     if (!schedule) return [];
     return schedule[dayName] || [];
   };
 
-  // Check if schedule is currently active
   const isScheduleActive = (scheduleItem) => {
     const { currentTime, currentDay } = getCurrentTimeInfo();
     const scheduleDay = new Date(selectedDate)
@@ -128,7 +118,6 @@ export default function CreateAttendanceSessionPage() {
     );
   };
 
-  // Check if schedule is upcoming
   const isScheduleUpcoming = (scheduleItem) => {
     const { currentTime, currentDay } = getCurrentTimeInfo();
     const scheduleDay = new Date(selectedDate)
@@ -140,31 +129,26 @@ export default function CreateAttendanceSessionPage() {
     return currentTime < scheduleItem.startTime;
   };
 
-  // Check if there's already an active session for this schedule
   const hasActiveSession = (scheduleId) => {
     return activeSessions?.some(
       (session) => session.scheduleId === scheduleId && session.isActive
     );
   };
 
-  // Handle create session
   const handleCreateSession = async () => {
     if (!selectedSchedule) {
       toast.error("Pilih jadwal terlebih dahulu");
       return;
     }
 
-    // Validasi Geolocation jika sessionType adalah 'qr' dan belum ada lokasi yang dipilih.
     if (sessionType === "qr" && !locationData) {
       toast.error("Mode QR Code memerlukan penentuan lokasi Geofence di peta.");
       return;
     }
 
-    // Siapkan data lokasi yang akan dikirim
     const finalLocationData = sessionType === "qr" ? locationData : {};
 
     if (sessionType === "manual") {
-      // Untuk mode manual, pastikan lat/lon/radius tidak dikirim (server akan mengabaikannya)
       finalLocationData.latitude = undefined;
       finalLocationData.longitude = undefined;
       finalLocationData.radiusMeters = undefined;
@@ -173,43 +157,37 @@ export default function CreateAttendanceSessionPage() {
     try {
       setIsCreating(true);
 
-      // Panggil createSession dengan ID jadwal, durasi, dan data lokasi
       const result = await createSession(
         selectedSchedule.id,
         sessionDuration,
-        finalLocationData // Kirim objek lokasi ke hook
+        finalLocationData
       );
 
       toast.success("Sesi absensi berhasil dibuat!");
-
-      // Redirect to manage session page
       router.push(`/teacher/attendance/active-sessions/${result.session.id}`);
     } catch (error) {
       console.error("Create session error:", error);
-      // Error is already handled by the hook
     } finally {
       setIsCreating(false);
     }
   };
 
-  // Get time range display
   const getTimeRange = (startTime, endTime) => {
-    return `${startTime} - ${endTime}`; // Time strings assumed to be in HH:mm format
+    return `${startTime} - ${endTime}`;
   };
 
-  // Get subject color
   const getSubjectColor = (subjectName) => {
     const colors = {
-      Matematika: "bg-blue-500",
-      Biologi: "bg-green-500",
-      Fisika: "bg-purple-500",
-      Kimia: "bg-red-500",
-      "Bahasa Indonesia": "bg-yellow-500",
-      "Bahasa Inggris": "bg-indigo-500",
-      Sejarah: "bg-orange-500",
-      Geografi: "bg-teal-500",
+      Matematika: "from-blue-400 to-blue-600",
+      Biologi: "from-blue-300 to-blue-500",
+      Fisika: "from-blue-500 to-blue-700",
+      Kimia: "from-blue-400 to-blue-600",
+      "Bahasa Indonesia": "from-blue-300 to-blue-500",
+      "Bahasa Inggris": "from-blue-400 to-blue-600",
+      Sejarah: "from-blue-300 to-blue-500",
+      Geografi: "from-blue-400 to-blue-600",
     };
-    return colors[subjectName] || "bg-gray-500";
+    return colors[subjectName] || "from-blue-400 to-blue-600";
   };
 
   const ScheduleCard = ({ scheduleItem, isSelected, onSelect }) => {
@@ -222,17 +200,17 @@ export default function CreateAttendanceSessionPage() {
       <div
         className={`card p-4 transition-all duration-200 border-2 ${
           isSelected
-            ? "border-green-500 bg-green-50"
+            ? "border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-blue"
             : isDisabled
-            ? "border-gray-200 bg-gray-50 cursor-not-allowed"
-            : "border-gray-200 hover:border-green-300 hover:shadow-md cursor-pointer"
-        } ${isActive ? "ring-2 ring-green-200" : ""}`}
+            ? "border-blue-100 bg-blue-50/30 cursor-not-allowed opacity-60"
+            : "border-blue-200 hover:border-blue-400 hover:shadow-md cursor-pointer hover:bg-blue-50/50"
+        } ${isActive ? "ring-2 ring-blue-300" : ""}`}
         onClick={() => !isDisabled && onSelect(scheduleItem)}
       >
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center space-x-2">
             <div
-              className={`w-3 h-3 rounded-full ${getSubjectColor(
+              className={`w-3 h-3 rounded-full bg-gradient-to-br ${getSubjectColor(
                 scheduleItem.subject.name
               )}`}
             />
@@ -243,17 +221,17 @@ export default function CreateAttendanceSessionPage() {
 
           <div className="flex items-center space-x-2">
             {isActive && (
-              <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded-full">
+              <span className="px-2 py-1 text-xs font-medium bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 rounded-full">
                 Berlangsung
               </span>
             )}
             {isUpcoming && (
-              <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+              <span className="px-2 py-1 text-xs font-medium bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-full">
                 Akan Datang
               </span>
             )}
             {hasSession && (
-              <span className="px-2 py-1 text-xs font-medium bg-orange-100 text-orange-800 rounded-full">
+              <span className="px-2 py-1 text-xs font-medium bg-gradient-to-r from-blue-200 to-blue-300 text-blue-900 rounded-full">
                 Sesi Aktif
               </span>
             )}
@@ -263,28 +241,28 @@ export default function CreateAttendanceSessionPage() {
         <div className="space-y-2 text-sm text-gray-600">
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1">
-              <Clock className="w-4 h-4" />
+              <Clock className="w-4 h-4 text-blue-500" />
               <span>
                 {getTimeRange(scheduleItem.startTime, scheduleItem.endTime)}
               </span>
             </div>
             <div className="flex items-center space-x-1">
-              <Users className="w-4 h-4" />
+              <Users className="w-4 h-4 text-blue-500" />
               <span>Kelas {scheduleItem.class.name}</span>
             </div>
           </div>
 
           {scheduleItem.room && (
             <div className="flex items-center space-x-1">
-              <MapPin className="w-4 h-4" />
+              <MapPin className="w-4 h-4 text-blue-500" />
               <span>{scheduleItem.room}</span>
             </div>
           )}
         </div>
 
         {isDisabled && (
-          <div className="mt-3 pt-3 border-t border-gray-200">
-            <div className="flex items-center space-x-1 text-xs text-orange-600">
+          <div className="mt-3 pt-3 border-t border-blue-200">
+            <div className="flex items-center space-x-1 text-xs text-blue-700">
               <AlertCircle className="w-3 h-3" />
               <span>Sudah ada sesi aktif untuk jadwal ini</span>
             </div>
@@ -292,8 +270,8 @@ export default function CreateAttendanceSessionPage() {
         )}
 
         {isSelected && !isDisabled && (
-          <div className="mt-3 pt-3 border-t border-green-200">
-            <div className="flex items-center space-x-1 text-xs text-green-600">
+          <div className="mt-3 pt-3 border-t border-blue-300">
+            <div className="flex items-center space-x-1 text-xs text-blue-700">
               <CheckCircle className="w-3 h-3" />
               <span>Jadwal dipilih</span>
             </div>
@@ -310,8 +288,8 @@ export default function CreateAttendanceSessionPage() {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-center py-12 card">
-          <RefreshCw className="w-8 h-8 animate-spin text-green-600" />
-          <span className="ml-2 text-gray-600">Memuat jadwal...</span>
+          <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+          <span className="ml-2 text-blue-700">Memuat jadwal...</span>
         </div>
       </div>
     );
@@ -324,15 +302,15 @@ export default function CreateAttendanceSessionPage() {
         <div className="flex items-center space-x-4">
           <button
             onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 text-blue-600" />
           </button>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gradient">
               Buat Sesi Absensi
             </h1>
-            <p className="text-gray-600 mt-1">
+            <p className="text-blue-600 mt-1">
               Pilih jadwal, atur durasi & lokasi (jika perlu)
             </p>
           </div>
@@ -343,9 +321,12 @@ export default function CreateAttendanceSessionPage() {
         {/* Schedule Selection (Colspan 2) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Date Selector */}
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-blue-500" /> Pilih Tanggal
+          <div className="card p-6 border-blue-200">
+            <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                <Calendar className="w-4 h-4 text-blue-600" />
+              </div>
+              Pilih Tanggal
             </h2>
             <div className="flex items-center space-x-4">
               <div className="flex-1">
@@ -354,9 +335,9 @@ export default function CreateAttendanceSessionPage() {
                   value={selectedDate}
                   onChange={(e) => {
                     setSelectedDate(e.target.value);
-                    setSelectedSchedule(null); // Reset selection when date changes
+                    setSelectedSchedule(null);
                   }}
-                  className="input-field w-full"
+                  className="input-field w-full border-blue-200 focus:border-blue-500"
                 />
               </div>
               <button
@@ -364,7 +345,7 @@ export default function CreateAttendanceSessionPage() {
                   setSelectedDate(new Date().toISOString().split("T")[0]);
                   setSelectedSchedule(null);
                 }}
-                className="btn-secondary"
+                className="btn-secondary border-blue-200 hover:border-blue-400"
               >
                 Hari Ini
               </button>
@@ -372,12 +353,12 @@ export default function CreateAttendanceSessionPage() {
           </div>
 
           {/* Schedule List */}
-          <div className="card p-6">
+          <div className="card p-6 border-blue-200">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-blue-900">
                 Jadwal Mengajar ({currentDate})
               </h2>
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-blue-600 font-medium">
                 {scheduleForDate.length} Sesi Ditemukan
               </div>
             </div>
@@ -394,10 +375,10 @@ export default function CreateAttendanceSessionPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-500">
-                <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+              <div className="text-center py-12 text-blue-600">
+                <Calendar className="w-12 h-12 mx-auto mb-4 text-blue-400" />
                 <p className="text-lg font-medium">Tidak Ada Jadwal</p>
-                <p className="text-sm">
+                <p className="text-sm text-blue-500">
                   Tidak ada jadwal mengajar untuk {selectedDate}
                 </p>
               </div>
@@ -408,21 +389,24 @@ export default function CreateAttendanceSessionPage() {
         {/* Session Configuration (Colspan 1) */}
         <div className="space-y-6">
           {/* Session Settings */}
-          <div className="card p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Settings className="w-5 h-5 text-purple-500" /> Pengaturan Sesi
+          <div className="card p-6 border-blue-200">
+            <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                <Settings className="w-4 h-4 text-blue-600" />
+              </div>
+              Pengaturan Sesi
             </h2>
 
             <div className="space-y-4">
               {/* Duration */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-blue-700 mb-2">
                   Durasi Sesi (menit)
                 </label>
                 <select
                   value={sessionDuration}
                   onChange={(e) => setSessionDuration(Number(e.target.value))}
-                  className="input-field w-full"
+                  className="input-field w-full border-blue-200 focus:border-blue-500"
                 >
                   <option value={15}>15 menit</option>
                   <option value={30}>30 menit</option>
@@ -434,34 +418,35 @@ export default function CreateAttendanceSessionPage() {
 
               {/* Session Type */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-blue-700 mb-2">
                   Tipe Absensi
                 </label>
                 <div className="space-y-2">
-                  <label className="flex items-center p-2 bg-white rounded-lg border hover:bg-gray-50 cursor-pointer">
+                  <label className="flex items-center p-3 bg-white rounded-lg border-2 border-blue-200 hover:bg-blue-50 hover:border-blue-400 cursor-pointer transition-all">
                     <input
                       type="radio"
                       name="sessionType"
                       value="manual"
                       checked={sessionType === "manual"}
                       onChange={(e) => setSessionType(e.target.value)}
-                      className="form-radio text-blue-600"
+                      className="form-radio text-blue-600 w-4 h-4"
                     />
-                    <span className="ml-2 text-sm font-medium">
+                    <span className="ml-2 text-sm font-medium text-gray-900">
                       Manual (Guru mengisi)
                     </span>
                   </label>
-                  <label className="flex items-center p-2 bg-white rounded-lg border hover:bg-gray-50 cursor-pointer">
+                  <label className="flex items-center p-3 bg-white rounded-lg border-2 border-blue-200 hover:bg-blue-50 hover:border-blue-400 cursor-pointer transition-all">
                     <input
                       type="radio"
                       name="sessionType"
                       value="qr"
                       checked={sessionType === "qr"}
                       onChange={(e) => setSessionType(e.target.value)}
-                      className="form-radio text-blue-600"
+                      className="form-radio text-blue-600 w-4 h-4"
                     />
-                    <span className="ml-2 text-sm font-medium flex items-center gap-1">
-                      QR Code (Siswa scan) <QrCode className="w-4 h-4" />
+                    <span className="ml-2 text-sm font-medium text-gray-900 flex items-center gap-1">
+                      QR Code (Siswa scan){" "}
+                      <QrCode className="w-4 h-4 text-blue-600" />
                     </span>
                   </label>
                 </div>
@@ -471,28 +456,31 @@ export default function CreateAttendanceSessionPage() {
 
           {/* Selected Schedule Summary */}
           {selectedSchedule && (
-            <div className="card p-6 bg-green-50 border-green-200">
-              <h3 className="text-lg font-semibold text-green-900 mb-4">
+            <div className="card p-6 bg-gradient-to-br from-blue-50/80 to-blue-100/50 border-blue-300">
+              <h3 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
+                <CheckCircle className="w-5 h-5 text-blue-600" />
                 Jadwal Dipilih
               </h3>
               <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between">
-                  <span className="text-green-700">Mata Pelajaran:</span>
-                  <span className="font-medium text-green-900">
+                <div className="flex items-center justify-between p-2 bg-white/70 rounded-lg">
+                  <span className="text-blue-700 font-medium">
+                    Mata Pelajaran:
+                  </span>
+                  <span className="font-semibold text-blue-900">
                     {selectedSchedule.subject.name}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-green-700">Kelas:</span>
-                  <span className="font-medium text-green-900">
+                <div className="flex items-center justify-between p-2 bg-white/70 rounded-lg">
+                  <span className="text-blue-700 font-medium">Kelas:</span>
+                  <span className="font-semibold text-blue-900">
                     {selectedSchedule.class.name}
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-green-700">Waktu:</span>
-                  <span className="font-medium text-green-900">
+                <div className="flex items-center justify-between p-2 bg-white/70 rounded-lg">
+                  <span className="text-blue-700 font-medium">Waktu:</span>
+                  <span className="font-semibold text-blue-900">
                     {getTimeRange(
                       selectedSchedule.startTime,
                       selectedSchedule.endTime
@@ -501,24 +489,26 @@ export default function CreateAttendanceSessionPage() {
                 </div>
 
                 {selectedSchedule.room && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-green-700">Ruangan:</span>
-                    <span className="font-medium text-green-900">
+                  <div className="flex items-center justify-between p-2 bg-white/70 rounded-lg">
+                    <span className="text-blue-700 font-medium">Ruangan:</span>
+                    <span className="font-semibold text-blue-900">
                       {selectedSchedule.room}
                     </span>
                   </div>
                 )}
 
-                <div className="flex items-center justify-between">
-                  <span className="text-green-700">Durasi Sesi:</span>
-                  <span className="font-medium text-green-900">
+                <div className="flex items-center justify-between p-2 bg-white/70 rounded-lg">
+                  <span className="text-blue-700 font-medium">
+                    Durasi Sesi:
+                  </span>
+                  <span className="font-semibold text-blue-900">
                     {sessionDuration} menit
                   </span>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <span className="text-green-700">Tipe:</span>
-                  <span className="font-medium text-green-900">
+                <div className="flex items-center justify-between p-2 bg-white/70 rounded-lg">
+                  <span className="text-blue-700 font-medium">Tipe:</span>
+                  <span className="font-semibold text-blue-900">
                     {sessionType === "manual" ? "Manual" : "QR Code"}
                   </span>
                 </div>
@@ -526,19 +516,22 @@ export default function CreateAttendanceSessionPage() {
             </div>
           )}
 
-          {/* Peta untuk Konfigurasi Lokasi (Hanya muncul jika QR Code dipilih) */}
+          {/* Peta untuk Konfigurasi Lokasi */}
           {sessionType === "qr" && (
-            <div className="card p-4 border-orange-200 bg-orange-50">
-              <h3 className="text-lg font-semibold text-orange-900 mb-3 flex items-center gap-2">
-                <MapPin className="w-5 h-5" /> Konfigurasi Geofence (QR)
+            <div className="card p-4 border-blue-300 bg-gradient-to-br from-blue-50/60 to-blue-100/40">
+              <h3 className="text-lg font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                  <MapPin className="w-4 h-4 text-blue-600" />
+                </div>
+                Konfigurasi Geofence (QR)
               </h3>
-              <p className="text-sm text-orange-700 mb-3">
+              <p className="text-sm text-blue-700 mb-3">
                 Tentukan lokasi wajib siswa untuk dapat melakukan scan QR Code.
               </p>
               <SchoolLocationPickerMap
-                initialLocation={locationData} // Kirim data yang sudah ada (jika ada)
+                initialLocation={locationData}
                 initialRadius={locationData?.radiusMeters}
-                onLocationSelect={setLocationData} // Terima data dari peta
+                onLocationSelect={setLocationData}
               />
             </div>
           )}
@@ -571,26 +564,34 @@ export default function CreateAttendanceSessionPage() {
 
             <button
               onClick={() => router.push("/teacher/attendance/active-sessions")}
-              className="btn-secondary w-full"
+              className="btn-secondary w-full border-blue-200 hover:border-blue-400"
             >
               Kembali ke Daftar Sesi
             </button>
           </div>
 
           {/* Help Info */}
-          <div className="card p-4 bg-blue-50 border-blue-200">
+          <div className="card p-4 bg-gradient-to-br from-blue-50/80 to-blue-100/50 border-blue-200">
             <div className="flex items-start space-x-2">
               <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
               <div className="text-sm text-blue-800">
-                <p className="font-medium mb-1">Tips:</p>
-                <ul className="space-y-1 text-xs">
-                  <li>
-                    • Pilih jadwal yang **sedang berlangsung** atau **akan
-                    dimulai**
+                <p className="font-semibold mb-2">Tips:</p>
+                <ul className="space-y-1.5 text-xs">
+                  <li className="flex items-start gap-1">
+                    <span className="text-blue-600">•</span>
+                    <span>
+                      Pilih jadwal yang sedang berlangsung atau akan dimulai
+                    </span>
                   </li>
-                  <li>• Mode QR Code memerlukan **lokasi (Geofence)**</li>
-                  <li>
-                    • Durasi sesi menentukan waktu maksimal siswa dapat absen
+                  <li className="flex items-start gap-1">
+                    <span className="text-blue-600">•</span>
+                    <span>Mode QR Code memerlukan lokasi (Geofence)</span>
+                  </li>
+                  <li className="flex items-start gap-1">
+                    <span className="text-blue-600">•</span>
+                    <span>
+                      Durasi sesi menentukan waktu maksimal siswa dapat absen
+                    </span>
                   </li>
                 </ul>
               </div>
